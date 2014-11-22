@@ -3,7 +3,7 @@ from random import randint
 import markit_wrapper
 
 # default values
-default_db = "trader.db"
+db = "trader.db"
 markit = markit_wrapper.Markit()
 
 class User(object):
@@ -33,8 +33,6 @@ class Account(object):
 		self.user_id = DB_API.fetch_user_id(username)
 		self.account_name = account_name
 		self.account_number = randint(11111111, 99999999)
-		self.user_username = user_username
-		self.user_password = user_password
 
 	@staticmethod
 	def delete_self(self):
@@ -73,13 +71,52 @@ class Stock(object):
 class DB_API:
 
 	@staticmethod
-	def delete_account(account_name, user_id):
-		pass
+	def create_user(username, password, first_name, last_name):
+		conn = sqlite3.connect(db)
+		c = conn.cursor()
+		statement = "INSERT INTO users(username, password, first_name, last_name) VALUES (?, ?, ?, ?)"
+		c.execute(statement, (username, password, first_name, last_name,))
+		conn.commit()
+		conn.close()
+
+	@staticmethod
+	def create_account(account_name, account_number, balance, user_id):
+		conn = sqlite3.connect(db)
+		c = conn.cursor()
+		statement = "INSERT INTO accounts(account_name, account_number, balance, user_id) VALUES (?, ?, ?, ?)"
+		c.execute(statement, (account_name, account_number, balance, user_id,))
+		conn.commit()
+		conn.close()
 
 	@staticmethod
 	def fetch_user_id(username):
 		pass
 
 	@staticmethod
-	def fetch_account(user_id, account_name):
+	def fetch_user(username):
+		conn = sqlite3.connect(db)
+		c = conn.cursor()
+		statement = "SELECT * FROM users WHERE username = ?"
+		c.execute(statement, (username,))
+		user = c.fetchall()
+		if len(user) == 0:
+			return None
+		else:
+			return user
+		conn.close()
+
+	@staticmethod
+	def fetch_accounts(user_id, account_name):
+		conn = sqlite3.connect(db)
+		c = conn.cursor()
+		statement = "SELECT * FROM accounts WHERE user_id = (?)"
+		c.execute(statement, (user_id,))
+		if len(c.fetchall()) == 0:
+			print(None)
+		else:
+			print(c.fetchall())
+		conn.close()
+
+	@staticmethod
+	def delete_account(account_name, user_id):
 		pass
