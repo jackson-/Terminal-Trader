@@ -4,7 +4,7 @@ import markit_wrapper
 
 # default values
 db = "trader.db"
-markit = markit_wrapper.Markit()
+
 
 class User(object):
 
@@ -15,35 +15,51 @@ class User(object):
 		self.last_name = last_name
 
 	def create_account(self, account_name, init_balance):
-		pass
+		account_number = randint(11111111, 99999999)
+		DB_API.create_account(account_name, account_number, init_balance, self.username)
 
 	def delete_account(self, account_name):
 		Account.delete_self(self.username, self.user_password)
 
-	def buy_stock(ticker, amount):
+	def create_portfolio(self, account_name, portfolio_name):
+		DB_API.create_portfolio(portfolio_name, account_name, self.username)
+
+	def change_username(self, old_username, new_username):
+		DB_API.change_username(self.username, new_username)
+
+	def change_password(self, username, new_password):
+		DB_API.change_password(self.username, new_password)
+
+	def change_first_name(self, username, new_first_name):
+		DB_API.change_first_name(self.username, new_first_name)
+
+	def change_last_name(self, username, new_last_name):
+		DB_API.change_last_name(self.username, new_last_name)
+
+	def buy_stock(self, ticker, amount):
 		pass
 
-	def sell_stock(ticker, amount):
+	def sell_stock(self, ticker, amount):
 		pass
 
 
 class Account(object):
-	def __init__(self, balance, username, account_name):
+	def __init__(self, balance, username, account_name, account_number):
 		self.balance = balance
-		self.user_id = DB_API.fetch_user_id(username)
+		self.username = username
 		self.account_name = account_name
-		self.account_number = randint(11111111, 99999999)
+		self.account_number = account_number
 
-	@staticmethod
 	def delete_self(self):
-		DB_API.delete_account(self.account_name, self.user_id)
+		DB_API.delete_account(self.account_name, self.username)
 
 	def deposit(self, amount):
-		self.balance = self.balance + amount
+		self.balance = int(self.balance) + int(amount)
+		DB_API.deposit(self.account_name, self.username, self.balance)
 
 	def withdraw(self, amount):
-		self.balance = self.balance - amount
-
+		self.balance = int(self.balance) - int(amount)
+		DB_API.deposit(self.account_name, self.username, self.balance)
 
 class Portfolio(object):
 
@@ -80,17 +96,17 @@ class DB_API:
 		conn.close()
 
 	@staticmethod
-	def create_account(account_name, account_number, balance, user_id):
+	def create_account(account_name, account_number, balance, username):
 		conn = sqlite3.connect(db)
 		c = conn.cursor()
-		statement = "INSERT INTO accounts(account_name, account_number, balance, user_id) VALUES (?, ?, ?, ?)"
-		c.execute(statement, (account_name, account_number, balance, user_id,))
+		statement = "INSERT INTO accounts(account_name, account_number, balance, username) VALUES (?, ?, ?, ?)"
+		c.execute(statement, (account_name, account_number, balance, username,))
 		conn.commit()
 		conn.close()
 
-	@staticmethod
-	def fetch_user_id(username):
-		pass
+	# @staticmethod
+	# def fetch_user_id(username):
+	# 	pass
 
 	@staticmethod
 	def fetch_user(username):
@@ -106,17 +122,103 @@ class DB_API:
 		conn.close()
 
 	@staticmethod
-	def fetch_accounts(user_id, account_name):
+	def fetch_accounts(username):
 		conn = sqlite3.connect(db)
 		c = conn.cursor()
-		statement = "SELECT * FROM accounts WHERE user_id = (?)"
-		c.execute(statement, (user_id,))
-		if len(c.fetchall()) == 0:
-			print(None)
+		statement = "SELECT * FROM accounts WHERE username = (?)"
+		c.execute(statement, (username,))
+		account_list = c.fetchall()
+		if len(account_list) == 0:
+			return None
 		else:
-			print(c.fetchall())
+			return account_list
 		conn.close()
 
 	@staticmethod
-	def delete_account(account_name, user_id):
-		pass
+	def fetch_account_by_name(account_name, username):
+		conn = sqlite3.connect(db)
+		c = conn.cursor()
+		statement = "SELECT * FROM accounts WHERE account_name = (?) and username = (?)"
+		c.execute(statement, (account_name, username,))
+		account = c.fetchall()
+		if len(account) == 0:
+			return None
+		else: 
+			return account
+		conn.close()
+
+	@staticmethod
+	def fetch_portfolios(username):
+		conn = sqlite3.connect(db)
+		c = conn.cursor()
+		statement = "SELECT * FROM portfolios WHERE username = (?)"
+		c.execute(statement, (username,))
+		portfolio_list = c.fetchall()
+		if len(portfolio_list) == 0:
+			return None
+		else:
+			return portfolio_list
+		conn.close()
+
+	@staticmethod
+	def deposit(account_name, username, amount):
+		conn = sqlite3.connect(db)
+		c = conn.cursor()
+		statement = "UPDATE accounts SET balance = (?) WHERE username = (?) AND account_name = (?)"
+		c.execute(statement, (amount, username, account_name,))
+		conn.commit()
+		conn.close()
+
+	@staticmethod
+	def withdraw(account_name, username, amount):
+		conn = sqlite3.connect(db)
+		c = conn.cursor()
+		statement = "UPDATE accounts SET balance = (?) WHERE username = (?) AND account_name = (?)"
+		c.execute(statement, (amount, username, account_name,))
+		conn.commit()
+		conn.close()
+
+	@staticmethod
+	def delete_account(account_name, username):
+		conn = sqlite3.connect(db)
+		c = conn.cursor()
+		statement = "DELETE FROM accounts WHERE account_name = (?) AND username = (?)"
+		c.execute(statement, (account_name, username,))
+		conn.commit()
+		conn.close()
+
+	@staticmethod
+	def change_username(old_username, new_username):
+		conn = sqlite3.connect(db)
+		c = conn.cursor()
+		statement = "UPDATE users SET username = (?) WHERE username = (?)"
+		c.execute(statement, (new_username, old_username,))
+		conn.commit()
+		conn.close()
+
+	@staticmethod
+	def change_password(username, new_password):
+		conn = sqlite3.connect(db)
+		c = conn.cursor()
+		statement = "UPDATE users SET password = (?) WHERE username = (?)"
+		c.execute(statement, (new_password, username,))
+		conn.commit()
+		conn.close()
+
+	@staticmethod
+	def change_first_name(username, new_first_name):
+		conn = sqlite3.connect(db)
+		c = conn.cursor()
+		statement = "UPDATE users SET first_name = (?) WHERE username = (?)"
+		c.execute(statement, (new_first_name, username,))
+		conn.commit()
+		conn.close()
+
+	@staticmethod
+	def change_last_name(username, new_last_name):
+		conn = sqlite3.connect(db)
+		c = conn.cursor()
+		statement = "UPDATE users SET last_name = (?) WHERE username = (?)"
+		c.execute(statement, (new_last_name, username,))
+		conn.commit()
+		conn.close()

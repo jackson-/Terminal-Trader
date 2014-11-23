@@ -22,12 +22,12 @@ def create_accounts_table():
 	c.execute('''DROP TABLE IF EXISTS `accounts`;''')
 	c.execute("""CREATE TABLE `accounts` (
 			`id` INTEGER,
-			`user_id` INTEGER,
+			`username` VARCHAR,
 			`balance` INT,
-			`account_name` TEXT,
+			`account_name` VARCHAR,
 			`account_number` INT,
 			PRIMARY KEY (`id`),
-			FOREIGN KEY (user_id) REFERENCES users(id)
+			FOREIGN KEY (username) REFERENCES users(username)
 			)""")
 	conn.commit()
 	conn.close()
@@ -39,12 +39,12 @@ def create_portfolios_table():
 	c.execute('''DROP TABLE IF EXISTS `portfolios`;''')
 	c.execute("""CREATE TABLE `portfolios` (
 			`id` INTEGER,
-			`user_id` INTEGER,
-			`account_id` INTEGER,
-			`portfolio_name` TEXT,
+			`username` VARCHAR,
+			`account_name` VARCHAR,
+			`portfolio_name` VARCHAR,
 			PRIMARY KEY (`id`),
-			FOREIGN KEY (user_id) REFERENCES users(id),
-			FOREIGN KEY (account_id) REFERENCES accounts(id)
+			FOREIGN KEY (username) REFERENCES users(username),
+			FOREIGN KEY (account_name) REFERENCES accounts(name)
 			)""")
 	conn.commit()
 	conn.close()

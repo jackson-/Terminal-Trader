@@ -20,4 +20,5 @@ class Markit:
 			return(result)
 
 
-
+# markit = Markit()
+# markit.company_search("AAPL")
