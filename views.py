@@ -64,7 +64,7 @@ class Views:
 			{0}
 			Portfolio Name: {1}
 
-				'''.format(item_num, portfolio[2]))
+				'''.format(item_num, portfolio[3]))
 		return input("What is the name of the portfolio you want to choose?:  ")
 
 
@@ -83,6 +83,21 @@ class Views:
 				'''.format(item[3], item[2]))
 		return input("What is would you like to do?: ")
 
+	@staticmethod
+	def portfolio_manager(portfolio):
+		for item in portfolio:
+			print('''
+			Portfolio Name: {1}
+
+			[1] Check Inventory
+			[2] Buy
+			[3] Sell
+			[4] Change Account
+			[5] Go back
+			[6] Main Menu
+
+				'''.format(portfolio[3]))
+		return input("What woudl you like to do?:  ")
 
 	@staticmethod
 	def profile_manager(user):

@@ -21,8 +21,8 @@ class User(object):
 	def delete_account(self, account_name):
 		Account.delete_self(self.username, self.user_password)
 
-	def create_portfolio(self, account_name, portfolio_name):
-		DB_API.create_portfolio(portfolio_name, account_name, self.username)
+	def create_portfolio(self, username, account_name, portfolio_name):
+		DB_API.create_portfolio( self.username, account_name, portfolio_name)
 
 	def change_username(self, old_username, new_username):
 		DB_API.change_username(self.username, new_username)
@@ -104,6 +104,15 @@ class DB_API:
 		conn.commit()
 		conn.close()
 
+	@staticmethod
+	def create_portfolio(username, account_name, portfolio_name):
+		conn = sqlite3.connect(db)
+		c = conn.cursor()
+		statement = "INSERT INTO portfolios(username, account_name, portfolio_name) VALUES (?, ?, ?)"
+		c.execute(statement, (username, account_name, portfolio_name,))
+		conn.commit()
+		conn.close()
+
 	# @staticmethod
 	# def fetch_user_id(username):
 	# 	pass
@@ -158,6 +167,19 @@ class DB_API:
 			return None
 		else:
 			return portfolio_list
+		conn.close()
+
+	@staticmethod
+	def fetch_portfolio_by_name(username, portfolio_name):
+		conn = sqlite3.connect(db)
+		c = conn.cursor()
+		statement = "SELECT * FROM portfolios WHERE username = (?) and portfolio_name = (?)"
+		c.execute(statement, (username, portfolio_name,))
+		portfolio = c.fetchall()
+		if len(account) == 0:
+			return None
+		else: 
+			return portfolio
 		conn.close()
 
 	@staticmethod

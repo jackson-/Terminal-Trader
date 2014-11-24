@@ -102,15 +102,32 @@ class Controller(object):
 			else:
 				Views.invalid()
 
+	def portfolio_view(self, portfolio):
+		while(True):
+			choice = Views.portfolio_manager()
+
 	def portfolio_manager(self):
 		while(True):
 			portfolio_list = DB_API.fetch_portfolios(self.username)
 			if portfolio_list == None:
-				portfolio_name = Views.portfolio_register()
-				account_name = Views.accounts_list("What will be the initial balance?: ")
-				self.user.create_portfolio(account_name, portfolio_name)
+				portfolio_name = Views.user_prompt("You don't seem to have any portfolios. Let's make one. What would you like to name it?:  ")
+				account_list = DB_API.fetch_accounts(self.username)
+				if account_list == None:
+					self.account_manager()
+				else:
+					account_name = Views.accounts_list(account_list)
+					account = DB_API.fetch_account_by_name(account_name, self.username)
+					if account == None:
+						Views.invalid()
+					else:
+						self.user.create_portfolio(self.username, account_name, portfolio_name)
 			else:
 				portfolio_name = Views.portfolio_list(portfolio_list)
+				portfolio = DB_API.fetch_portfolio_by_name(self.username, portfolio_name)
+				if portfolio == None:
+					Views.invalid()
+				else:
+					self.portfolio_view(portfolio)
 
 	def profile_manager(self):
 		while(True):
