@@ -60,7 +60,7 @@ def create_stocks_table():
 			`ticker` VARCHAR,
 			`company_name` TEXT,
 			`buy_price` INT,
-			FOREIGN KEY (portfolio_id) REFERENCES portfolioss(id),
+			FOREIGN KEY (portfolio_id) REFERENCES portfolios(id),
 			PRIMARY KEY (`id`)
 			)""")
 	conn.commit()

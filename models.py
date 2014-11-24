@@ -64,9 +64,9 @@ class Account(object):
 class Portfolio(object):
 
 	def __init__(self, username, portfolio_name, account_name):
-		self.user_id = DB_API.fetch_user_id(username)
+		self.username = username
 		self.portfolio_name = portfolio_name
-		self.account = DB.fetch_account(self.user_id, account_name)
+		self.account = DB_API.fetch_account_by_name(self.username, account_name)
 
 	def add_stock(self, ticker, amount):
 		pass
@@ -113,10 +113,6 @@ class DB_API:
 		conn.commit()
 		conn.close()
 
-	# @staticmethod
-	# def fetch_user_id(username):
-	# 	pass
-
 	@staticmethod
 	def fetch_user(username):
 		conn = sqlite3.connect(db)
@@ -147,8 +143,21 @@ class DB_API:
 	def fetch_account_by_name(account_name, username):
 		conn = sqlite3.connect(db)
 		c = conn.cursor()
-		statement = "SELECT * FROM accounts WHERE account_name = (?) and username = (?)"
+		statement = "SELECT * FROM accounts WHERE account_name = (?) AND username = (?)"
 		c.execute(statement, (account_name, username,))
+		account = c.fetchall()
+		if len(account) == 0:
+			return None
+		else: 
+			return account
+		conn.close()
+
+	@staticmethod
+	def fetch_account_by_portfolio(portfolio_name, username):
+		conn = sqlite3.connect(db)
+		c = conn.cursor()
+		statement = "SELECT account_name FROM portfolios WHERE portfolio_name = (?) AND username = (?)"
+		c.execute(statement, (portfolio_name, username,))
 		account = c.fetchall()
 		if len(account) == 0:
 			return None
@@ -173,13 +182,29 @@ class DB_API:
 	def fetch_portfolio_by_name(username, portfolio_name):
 		conn = sqlite3.connect(db)
 		c = conn.cursor()
-		statement = "SELECT * FROM portfolios WHERE username = (?) and portfolio_name = (?)"
+		statement = "SELECT * FROM portfolios WHERE username = (?) AND portfolio_name = (?)"
 		c.execute(statement, (username, portfolio_name,))
 		portfolio = c.fetchall()
-		if len(account) == 0:
+		if len(portfolio) == 0:
 			return None
-		else: 
+		else:
 			return portfolio
+		conn.close()
+
+	@staticmethod
+	def fetch_portfolio_inventory(username, portfolio_name):
+		conn = sqlite3.connect(db)
+		c = conn.cursor()
+		statement = "SELECT id FROM portfolios WHERE portfolio_name = (?) AND username = (?)"
+		c.execute(statement, (portfolio_name, username,))
+		portfolio_id = c.fetchone()
+		statement = "SELECT * FROM stocks WHERE portfolio_id = (?)"
+		c.execute(statement, (portfolio_id,))
+		stocks = c.fetchall()
+		if len(stocks) == 0:
+			return None
+		else:
+			return stocks
 		conn.close()
 
 	@staticmethod

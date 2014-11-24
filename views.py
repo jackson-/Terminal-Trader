@@ -84,10 +84,11 @@ class Views:
 		return input("What is would you like to do?: ")
 
 	@staticmethod
-	def portfolio_manager(portfolio):
+	def portfolio_manager(portfolio, account_name):
 		for item in portfolio:
 			print('''
-			Portfolio Name: {1}
+			Portfolio Name: {0}
+			Account Name: {1}
 
 			[1] Check Inventory
 			[2] Buy
@@ -96,8 +97,8 @@ class Views:
 			[5] Go back
 			[6] Main Menu
 
-				'''.format(portfolio[3]))
-		return input("What woudl you like to do?:  ")
+				'''.format(item[3], account_name))
+		return input("What would you like to do?:  ")
 
 	@staticmethod
 	def profile_manager(user):
@@ -115,3 +116,14 @@ class Views:
 
 			'''.format(user.username, user.password, user.first_name, user.last_name,))
 		return input("What is would you like to do?: ")
+
+	@staticmethod
+	def inventory_view(inventory):
+		for stock in inventory:
+			print('''
+			
+			Stock Ticker: {0}
+			Company Name: {1}
+			Buy Price: {2}
+
+				'''.format(stock[3], stock[2]))

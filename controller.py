@@ -47,13 +47,15 @@ class Controller(object):
 			if choice == "1":
 				self.account_manager()
 			elif choice =="2":
-				self.portfolio_manager()
+				self.portfolio_list()
 			elif choice =="3":
 				self.stock_lookup()
 			elif choice =="4":
 				self.profile_manager()
 			elif choice =="5":
 				self.sign_in()
+			else:
+				Views.invalid()
 
 				
 			
@@ -104,9 +106,30 @@ class Controller(object):
 
 	def portfolio_view(self, portfolio):
 		while(True):
-			choice = Views.portfolio_manager()
+			account = DB_API.fetch_account_by_portfolio(portfolio[0][3], self.username)
+			account_name = account[0][0]
+			self.portfolio = Portfolio(self.username, portfolio[0][3], account_name)
+			choice = Views.portfolio_manager(portfolio, account_name)
+			if choice == "1":
+				inventory =  DB_API.fetch_portfolio_inventory(self.username, self.portfolio.portfolio_name)
+				if inventory == None:
+					print("You do not seem to have any stocks. Go buy some!")
+				else:
+					Views.inventory_view(inventory)
+			elif choice == "2":
+				pass
+			elif choice == "3":
+				pass
+			elif choice == "4":
+				pass
+			elif choice == "5":
+				self.portfolio_list()
+			elif choice == "6":
+				self.main_menu()
+			else:
+				Views.invalid()
 
-	def portfolio_manager(self):
+	def portfolio_list(self):
 		while(True):
 			portfolio_list = DB_API.fetch_portfolios(self.username)
 			if portfolio_list == None:
