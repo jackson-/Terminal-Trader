@@ -36,11 +36,20 @@ class Views:
 		''')
 
 	@staticmethod
+	def account_menu():
+		return input('''
+	[1] View Bank Accounts
+	[2] Create Account
+
+	What would you like to do?:  
+		''')
+
+	@staticmethod
 	def account_register():
 		return input('''
-	You don't seem to have any bank accounts. Let's make one.
+	You are trying to make a new bank account.
 
-		What would you like to name the account?:  
+	What would you like to name the account?:  
 		''')
 
 	@staticmethod

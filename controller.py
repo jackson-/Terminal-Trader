@@ -45,7 +45,7 @@ class Controller(object):
 		while(True):
 			choice = Views.main_menu()
 			if choice == "1":
-				self.account_manager()
+				self.account_menu()
 			elif choice =="2":
 				self.portfolio_list()
 			elif choice =="3":
@@ -57,16 +57,28 @@ class Controller(object):
 			else:
 				Views.invalid()
 
-				
+	def account_menu(self):
+		choice = Views.account_menu()
+		if choice == "1":
+			self.accounts_view()
+		elif choice == "2":
+			account_name = Views.account_register()
+			init_balance = Views.user_prompt("What will be the initial balance?: ")
+			if int(init_balance) < 1:
+				Views.invalid()
+			else:
+				self.user.create_account(account_name, init_balance)
 			
-	def account_manager(self):
+	def accounts_view(self):
 		while(True):
 			account_list = DB_API.fetch_accounts(self.username)
 			if account_list == None:
 				account_name = Views.account_register()
 				init_balance = Views.user_prompt("What will be the initial balance?: ")
-				self.user.create_account(account_name, init_balance)
-				account_list = DB_API.fetch_accounts(self.username)
+				if int(init_balance) < 1:
+					Views.invalid()
+				else:
+					self.user.create_account(account_name, init_balance)
 			else:
 				account_name = Views.accounts_list(account_list)
 				account = DB_API.fetch_account_by_name(account_name, self.username)
@@ -82,12 +94,18 @@ class Controller(object):
 			choice = Views.account_manager(account)
 			if choice == "1":
 				amount = Views.user_prompt("How much would you like to deposit?: ")
-				self.account.deposit(amount)
-				return self.main_menu()
+				if int(amount) < 1:
+					Views.invalid()
+				else:
+					self.account.deposit(amount)
 			elif choice == "2":
 				amount = Views.user_prompt("How much would you like to withdraw?: ")
-				self.account.withdraw(amount)
-				return self.main_menu()
+				if int(amount) < 1:
+					Views.invalid()
+				elif int(amount) > self.account.balance:
+					print("Error: You don't have that much")
+				else:
+					self.account.withdraw(amount)
 			elif choice == "3":
 				deleter = Views.user_prompt("Are you sure you want to delete this account? Y/N: ")
 				if deleter == "Y" or deleter =="y":
