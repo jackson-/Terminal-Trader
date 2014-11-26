@@ -225,8 +225,8 @@ class Controller(object):
 			if choice == "1":
 				new_username = Views.user_prompt("What would you like to change your username too?: ")
 				self.user.change_username(self.user.username, new_username)
-				user = DB_API.fetch_user(self.username)
-				self.user = User(self.username, user[0][2], user[0][3], user[0][4])
+				user = DB_API.fetch_user(new_username)
+				self.user = User(user[0][0], user[0][1], user[0][2], user[0][3], user[0][4])
 			elif choice == "2":
 				new_password = Views.user_prompt("What would you like to change your password too?: ")
 				self.user.change_password(self.user.username, new_password)

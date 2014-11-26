@@ -135,8 +135,9 @@ class Views:
 			Company Name: {1}
 			Buy Price: ${2}
 			Quantity: {3}
+			Timestamp: {4}
 
-				'''.format(stock[2].upper(), stock[3], stock[4], stock[5]))
+				'''.format(stock[2].upper(), stock[3], stock[4], stock[5], stock[6]))
 
 	@staticmethod
 	def stock_lookup(quote):

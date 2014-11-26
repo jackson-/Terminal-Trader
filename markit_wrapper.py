@@ -20,5 +20,5 @@ class Markit:
 			return(result)
 
 
-markit = Markit()
-print(markit.company_search("Amazon.com Inc"))
+# markit = Markit()
+# print(markit.company_search("Amazon.com Inc"))
