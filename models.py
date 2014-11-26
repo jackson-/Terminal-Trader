@@ -1,6 +1,7 @@
 import sqlite3
 from random import randint
 import markit_wrapper
+from datetime import datetime
 
 # default values
 db = "trader.db"
@@ -69,23 +70,21 @@ class Portfolio(object):
 		DB_API.change_portfolio_account(account_id, username, portfolio_id)
 
 	def buy_stock(self, ticker, amount):
+		timestamp = datetime.now()
 		quote = markit.get_quote(ticker)
 		if quote == None:
-			return None
+			return "Nothing here"
 		buy_price = int(quote['LastPrice'])
 		company_name = quote['Name']
 		deductable = buy_price * int(amount)
 		account = DB_API.fetch_account_by_name(self.account_name, self.username)
 		account_balance = account[0][2]
-		print(account_balance)
 		new_balance = account_balance - deductable
 		if new_balance < 0:
-			print('went false')
 			return False
 		else:
-			print('went thru')
 			DB_API.withdraw(self.account_name, self.username, new_balance)
-			DB_API.add_stock(self.id, ticker, company_name, buy_price, amount)
+			DB_API.add_stock(self.id, ticker, company_name, buy_price, amount, timestamp)
 
 	def sell_stock(self, ticker, buy_price, amount):
 		stock = DB_API.fetch_stock(self.id, ticker, buy_price)
@@ -132,11 +131,11 @@ class DB_API:
 		conn.close()
 
 	@staticmethod
-	def add_stock(portfolio_id, ticker, company_name, buy_price, amount):
+	def add_stock(portfolio_id, ticker, company_name, buy_price, amount, timestamp):
 		conn = sqlite3.connect(db)
 		c = conn.cursor()
-		statement = "INSERT INTO stocks(portfolio_id, ticker, company_name, buy_price, amount) VALUES (?, ?, ?, ?, ?)"
-		c.execute(statement, (portfolio_id, ticker, company_name, buy_price, amount,))
+		statement = "INSERT INTO stocks(portfolio_id, ticker, company_name, buy_price, amount, timestamp) VALUES (?, ?, ?, ?, ?, ?)"
+		c.execute(statement, (portfolio_id, ticker, company_name, buy_price, amount, timestamp,))
 		conn.commit()
 		conn.close()
 

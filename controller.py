@@ -144,7 +144,7 @@ class Controller(object):
 				ticker = Views.user_prompt("What is the stock ticker?")
 				amount = Views.user_prompt("How many would you like to buy?")
 				buy = self.portfolio.buy_stock(ticker, amount)
-				if buy == None:
+				if buy == "Nothing here":
 					Views.invalid()
 				elif buy == False:
 					print("Not enough in account!")

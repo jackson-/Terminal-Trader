@@ -8,17 +8,17 @@ class Markit:
 	def company_search(self, string):
 		result = requests.get(self.lookup_url + string).json()
 		if len(result) == 0:
-			return(None)
+			return None
 		else:
-			return(result)
+			return result
 
 	def get_quote(self, ticker):
 		result = requests.get(self.quote_url + ticker).json()
 		if 'Message' in result:
-			return(None)
+			return None
 		else:
-			return(result)
+			return result
 
 
-markit = Markit()
-print(markit.company_search("Amazon.com Inc"))
+# markit = Markit()
+# print(markit.company_search("Amazon.com Inc"))
