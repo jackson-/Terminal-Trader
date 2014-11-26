@@ -150,7 +150,17 @@ class Controller(object):
 					print("Not enough in account!")
 				self.portfolio_list()
 			elif choice == "3":
-				pass
+				inventory =  DB_API.fetch_portfolio_inventory(self.username, self.portfolio.portfolio_name)
+				Views.inventory_view(inventory)
+				ticker = Views.user_prompt("What is the ticker of the stock to sell?")
+				buy_price = Views.user_prompt("What is the buy price of the stock to sell?")
+				timestamp = Views.user_prompt("What is the timestamp of the stock to sell?")
+				amount = Views.user_prompt("How much of this stock do you want to sell?")
+				sell = self.portfolio.sell_stock(ticker, buy_price, amount, timestamp)
+				if sell == False:
+					Views.invalid()
+				else:
+					self.portfolio_list()
 			elif choice == "4":
 				account_list = DB_API.fetch_accounts(self.username)
 				account_name = Views.account_list(account_list)
