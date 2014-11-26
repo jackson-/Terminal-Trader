@@ -137,3 +137,14 @@ class Views:
 			Quantity: {3}
 
 				'''.format(stock[2].upper(), stock[3], stock[4], stock[5]))
+
+	@staticmethod
+	def stock_lookup(quote):
+		print('''
+
+		Stock Ticker: {0}
+		Company Name: {1}
+		Price: {2}
+
+
+			'''.format(quote['Symbol'], quote['Name'], quote['LastPrice']))

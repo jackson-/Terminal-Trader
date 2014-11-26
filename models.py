@@ -65,6 +65,9 @@ class Portfolio(object):
 		self.portfolio_name = portfolio_name
 		self.account_name = account_name
 
+	def change_account(self, account_id, username, portfolio_id):
+		DB_API.change_portfolio_account(account_id, username, portfolio_id)
+
 	def buy_stock(self, ticker, amount):
 		quote = markit.get_quote(ticker)
 		if quote == None:
@@ -74,10 +77,13 @@ class Portfolio(object):
 		deductable = buy_price * int(amount)
 		account = DB_API.fetch_account_by_name(self.account_name, self.username)
 		account_balance = account[0][2]
+		print(account_balance)
 		new_balance = account_balance - deductable
 		if new_balance < 0:
+			print('went false')
 			return False
 		else:
+			print('went thru')
 			DB_API.withdraw(self.account_name, self.username, new_balance)
 			DB_API.add_stock(self.id, ticker, company_name, buy_price, amount)
 
@@ -301,5 +307,14 @@ class DB_API:
 		c = conn.cursor()
 		statement = "UPDATE users SET last_name = (?) WHERE username = (?)"
 		c.execute(statement, (new_last_name, username,))
+		conn.commit()
+		conn.close()
+
+	@staticmethod
+	def change_portfolio_account(account_id, username, portfolio_id):
+		conn = sqlite3.connect(db)
+		c = conn.cursor()
+		statement = "UPDATE portfolios SET account_id = (?) WHERE username = (?) AND portfolio_id = (?)"
+		c.execute(statement, (account_id, username, portfolio_id,))
 		conn.commit()
 		conn.close()

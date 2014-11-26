@@ -10,7 +10,7 @@ class Markit:
 		if len(result) == 0:
 			return(None)
 		else:
-			print(result)
+			return(result)
 
 	def get_quote(self, ticker):
 		result = requests.get(self.quote_url + ticker).json()
@@ -20,5 +20,5 @@ class Markit:
 			return(result)
 
 
-# markit = Markit()
-# markit.get_quote("AAPL")
+markit = Markit()
+print(markit.company_search("Amazon.com Inc"))

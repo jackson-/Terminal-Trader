@@ -1,4 +1,4 @@
-from models import User, Portfolio, Account, Stock, DB_API
+from models import User, Portfolio, Account, Stock, DB_API, markit
 from views import Views
 import re
 # markit = markit_wrapper.Markit()
@@ -148,12 +148,16 @@ class Controller(object):
 					Views.invalid()
 				elif buy == False:
 					print("Not enough in account!")
+				self.portfolio_list()
 			elif choice == "3":
 				pass
 			elif choice == "4":
 				account_list = DB_API.fetch_accounts(self.username)
 				account_name = Views.account_list(account_list)
 				account = DB_API.fetch_account_by_name(account_name ,self.username)
+				account_id = account[0][0]
+				self.portfolio.change_account(account_id, self.username, self.id)
+				self.portfolio_list()
 			elif choice == "5":
 				self.portfolio_list()
 			elif choice == "6":
@@ -190,6 +194,30 @@ class Controller(object):
 					self.user.create_portfolio(self.username, account_name, portfolio_name)
 					self.portfolio_list()
 
+	def stock_lookup(self):
+		while(True):
+			style_choice = Views.user_prompt("Would you like to find the company by name or ticker?")
+			if style_choice == 'ticker':
+				ticker = Views.user_prompt("What is the ticker of the company to look up?")
+				quote = markit.get_quote(ticker)
+				if quote == None:
+					Views.invalid()
+				else:
+					Views.stock_lookup(quote)
+					self.main_menu()
+			elif style_choice == 'name':
+				name = Views.user_prompt("What is the name of the company to look up?")
+				search = markit.company_search(name)
+				if search == None:
+					Views.invalid()
+				else:
+					symbol = search[0]['Symbol']
+					quote = markit.get_quote(symbol)
+					Views.stock_lookup(quote)
+					self.main_menu()
+			else:
+				Views.invalid()
+				self.main_menu()
 
 	def profile_manager(self):
 		while(True):
