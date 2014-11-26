@@ -14,8 +14,7 @@ class Controller(object):
 				return self.user_registration()
 			else:
 				Views.clear()
-				self.id = self.user[0][0]
-				self.user = User(self.username, self.user[0][2], self.user[0][3], self.user[0][4])
+				self.user = User(self.user[0][0], self.username, self.user[0][2], self.user[0][3], self.user[0][4])
 				print(self.user.password)
 				password_attempt = Views.user_prompt("What is your password?:  ")
 				if password_attempt != self.user.password:
@@ -35,8 +34,7 @@ class Controller(object):
 				self.password = Views.user_prompt("What is your password?:  ")
 				DB_API.create_user(self.username, self.password, self.first_name, self.last_name)
 				self.user = DB_API.fetch_user(self.username)
-				self.id = self.user[0][0]
-				self.user = User(self.username, self.user[0][1], self.user[0][2], self.user[0][3])
+				self.user = User(self.user[0][0], self.user[0][1], self.user[0][2], self.user[0][3], self.user[0][4])
 				return self.main_menu()
 			elif choice == "n" or choice == "N":
 				return self.sign_in()
@@ -58,27 +56,23 @@ class Controller(object):
 				Views.invalid()
 
 	def account_menu(self):
-		choice = Views.account_menu()
-		if choice == "1":
-			self.accounts_view()
-		elif choice == "2":
-			account_name = Views.account_register()
-			init_balance = Views.user_prompt("What will be the initial balance?: ")
-			if int(init_balance) < 1:
-				Views.invalid()
-			else:
-				self.user.create_account(account_name, init_balance)
-			
-	def accounts_view(self):
 		while(True):
-			account_list = DB_API.fetch_accounts(self.username)
-			if account_list == None:
+			choice = Views.account_menu()
+			if choice == "1":
+				self.accounts_view()
+			elif choice == "2":
 				account_name = Views.account_register()
 				init_balance = Views.user_prompt("What will be the initial balance?: ")
 				if int(init_balance) < 1:
 					Views.invalid()
 				else:
 					self.user.create_account(account_name, init_balance)
+			
+	def accounts_view(self):
+		while(True):
+			account_list = DB_API.fetch_accounts(self.username)
+			if account_list == None:
+				self.account_registration()
 			else:
 				account_name = Views.accounts_list(account_list)
 				account = DB_API.fetch_account_by_name(account_name, self.username)
@@ -88,9 +82,19 @@ class Controller(object):
 				else:
 					self.account_edit(account)
 
+	def account_registration(self):
+		while(True):
+			account_name = Views.account_register()
+			init_balance = Views.user_prompt("What will be the initial balance?: ")
+			if int(init_balance) < 1:
+				Views.invalid()
+			else:
+				self.user.create_account(account_name, init_balance)
+				self.account_menu()
+
 	def account_edit(self, account):
 		while(True):
-			self.account = Account(account[0][2], account[0][1], account[0][3], account[0][4])
+			self.account = Account(account[0][0], account[0][1], account[0][2], account[0][3], account[0][4])
 			choice = Views.account_manager(account)
 			if choice == "1":
 				amount = Views.user_prompt("How much would you like to deposit?: ")
@@ -98,6 +102,7 @@ class Controller(object):
 					Views.invalid()
 				else:
 					self.account.deposit(amount)
+					self.accounts_view()
 			elif choice == "2":
 				amount = Views.user_prompt("How much would you like to withdraw?: ")
 				if int(amount) < 1:
@@ -106,6 +111,7 @@ class Controller(object):
 					print("Error: You don't have that much")
 				else:
 					self.account.withdraw(amount)
+					self.accounts_view()
 			elif choice == "3":
 				deleter = Views.user_prompt("Are you sure you want to delete this account? Y/N: ")
 				if deleter == "Y" or deleter =="y":
@@ -126,7 +132,7 @@ class Controller(object):
 		while(True):
 			account = DB_API.fetch_account_by_portfolio(portfolio[0][3], self.username)
 			account_name = account[0][0]
-			self.portfolio = Portfolio(self.username, portfolio[0][3], account_name)
+			self.portfolio = Portfolio(portfolio[0][0], self.username, portfolio[0][3], account_name)
 			choice = Views.portfolio_manager(portfolio, account_name)
 			if choice == "1":
 				inventory =  DB_API.fetch_portfolio_inventory(self.username, self.portfolio.portfolio_name)
@@ -135,11 +141,19 @@ class Controller(object):
 				else:
 					Views.inventory_view(inventory)
 			elif choice == "2":
-				pass
+				ticker = Views.user_prompt("What is the stock ticker?")
+				amount = Views.user_prompt("How many would you like to buy?")
+				buy = self.portfolio.buy_stock(ticker, amount)
+				if buy == None:
+					Views.invalid()
+				elif buy == False:
+					print("Not enough in account!")
 			elif choice == "3":
 				pass
 			elif choice == "4":
-				pass
+				account_list = DB_API.fetch_accounts(self.username)
+				account_name = Views.account_list(account_list)
+				account = DB_API.fetch_account_by_name(account_name ,self.username)
 			elif choice == "5":
 				self.portfolio_list()
 			elif choice == "6":
@@ -151,17 +165,7 @@ class Controller(object):
 		while(True):
 			portfolio_list = DB_API.fetch_portfolios(self.username)
 			if portfolio_list == None:
-				portfolio_name = Views.user_prompt("You don't seem to have any portfolios. Let's make one. What would you like to name it?:  ")
-				account_list = DB_API.fetch_accounts(self.username)
-				if account_list == None:
-					self.account_manager()
-				else:
-					account_name = Views.accounts_list(account_list)
-					account = DB_API.fetch_account_by_name(account_name, self.username)
-					if account == None:
-						Views.invalid()
-					else:
-						self.user.create_portfolio(self.username, account_name, portfolio_name)
+				self.portfolio_registration()
 			else:
 				portfolio_name = Views.portfolio_list(portfolio_list)
 				portfolio = DB_API.fetch_portfolio_by_name(self.username, portfolio_name)
@@ -169,6 +173,23 @@ class Controller(object):
 					Views.invalid()
 				else:
 					self.portfolio_view(portfolio)
+
+	def portfolio_registration(self):
+		while(True):
+			portfolio_name = Views.user_prompt("You don't seem to have any portfolios. Let's make one. What would you like to name it?:  ")
+			account_list = DB_API.fetch_accounts(self.username)
+			if account_list == None:
+				print("You don't seem to have any bank accounts to hook up to your portfolio.\n Let's make one now.")
+				self.account_registration()
+			else:
+				account_name = Views.accounts_list(account_list)
+				account = DB_API.fetch_account_by_name(account_name, self.username)
+				if account == None:
+					Views.invalid()
+				else:
+					self.user.create_portfolio(self.username, account_name, portfolio_name)
+					self.portfolio_list()
+
 
 	def profile_manager(self):
 		while(True):

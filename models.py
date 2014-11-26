@@ -4,11 +4,12 @@ import markit_wrapper
 
 # default values
 db = "trader.db"
-
+markit = markit_wrapper.Markit()
 
 class User(object):
 
-	def __init__(self, username, password, first_name, last_name):
+	def __init__(self, user_id, username, password, first_name, last_name):
+		self.id = user_id
 		self.username = username
 		self.password = password
 		self.first_name = first_name
@@ -36,15 +37,10 @@ class User(object):
 	def change_last_name(self, username, new_last_name):
 		DB_API.change_last_name(self.username, new_last_name)
 
-	def buy_stock(self, ticker, amount):
-		pass
-
-	def sell_stock(self, ticker, amount):
-		pass
-
 
 class Account(object):
-	def __init__(self, balance, username, account_name, account_number):
+	def __init__(self, account_id, username, balance, account_name, account_number):
+		self.id = account_id
 		self.balance = balance
 		self.username = username
 		self.account_name = account_name
@@ -63,21 +59,37 @@ class Account(object):
 
 class Portfolio(object):
 
-	def __init__(self, username, portfolio_name, account_name):
+	def __init__(self, portfolio_id, username, portfolio_name, account_name):
+		self.id = portfolio_id
 		self.username = username
 		self.portfolio_name = portfolio_name
-		self.account = DB_API.fetch_account_by_name(self.username, account_name)
+		self.account_name = account_name
 
-	def add_stock(self, ticker, amount):
-		pass
+	def buy_stock(self, ticker, amount):
+		quote = markit.get_quote(ticker)
+		if quote == None:
+			return None
+		buy_price = int(quote['LastPrice'])
+		company_name = quote['Name']
+		deductable = buy_price * int(amount)
+		account = DB_API.fetch_account_by_name(self.account_name, self.username)
+		account_balance = account[0][2]
+		new_balance = account_balance - deductable
+		if new_balance < 0:
+			return False
+		else:
+			DB_API.withdraw(self.account_name, self.username, new_balance)
+			DB_API.add_stock(self.id, ticker, company_name, buy_price, amount)
 
-	def delete_stock(self, ticker, amount):
-		pass
+	def sell_stock(self, ticker, buy_price, amount):
+		stock = DB_API.fetch_stock(self.id, ticker, buy_price)
+		print(stock)
 
 
 class Stock(object):
 
-	def __init__(self, ticker, company_name, buy_price, portfolio_id):
+	def __init__(self, stock_id, ticker, company_name, buy_price, portfolio_id):
+		self.id = stock_id
 		self.ticker = ticker
 		self.company_name = company_name
 		self.buy_price = buy_price
@@ -110,6 +122,15 @@ class DB_API:
 		c = conn.cursor()
 		statement = "INSERT INTO portfolios(username, account_name, portfolio_name) VALUES (?, ?, ?)"
 		c.execute(statement, (username, account_name, portfolio_name,))
+		conn.commit()
+		conn.close()
+
+	@staticmethod
+	def add_stock(portfolio_id, ticker, company_name, buy_price, amount):
+		conn = sqlite3.connect(db)
+		c = conn.cursor()
+		statement = "INSERT INTO stocks(portfolio_id, ticker, company_name, buy_price, amount) VALUES (?, ?, ?, ?, ?)"
+		c.execute(statement, (portfolio_id, ticker, company_name, buy_price, amount,))
 		conn.commit()
 		conn.close()
 
@@ -199,7 +220,7 @@ class DB_API:
 		c.execute(statement, (portfolio_name, username,))
 		portfolio_id = c.fetchone()
 		statement = "SELECT * FROM stocks WHERE portfolio_id = (?)"
-		c.execute(statement, (portfolio_id,))
+		c.execute(statement, (portfolio_id[0],))
 		stocks = c.fetchall()
 		if len(stocks) == 0:
 			return None
@@ -208,20 +229,33 @@ class DB_API:
 		conn.close()
 
 	@staticmethod
-	def deposit(account_name, username, amount):
+	def fetch_stock(portfolio_id, ticker, buy_price):
+		conn = sqlite3.connect(db)
+		c = conn.cursor()
+		statement = "SELECT * FROM stocks WHERE portfolio_id = (?), ticker = (?), buy_price = (?)"
+		c.execute(statement, (portfolio_id, ticker, buy_price,))
+		stocks = c.fetchall()
+		if len(stocks) == 0:
+			return None
+		else:
+			return stocks
+		conn.close()
+
+	@staticmethod
+	def deposit(account_name, username, new_balance):
 		conn = sqlite3.connect(db)
 		c = conn.cursor()
 		statement = "UPDATE accounts SET balance = (?) WHERE username = (?) AND account_name = (?)"
-		c.execute(statement, (amount, username, account_name,))
+		c.execute(statement, (new_balance, username, account_name,))
 		conn.commit()
 		conn.close()
 
 	@staticmethod
-	def withdraw(account_name, username, amount):
+	def withdraw(account_name, username, new_balance):
 		conn = sqlite3.connect(db)
 		c = conn.cursor()
 		statement = "UPDATE accounts SET balance = (?) WHERE username = (?) AND account_name = (?)"
-		c.execute(statement, (amount, username, account_name,))
+		c.execute(statement, (new_balance, username, account_name,))
 		conn.commit()
 		conn.close()
 

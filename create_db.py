@@ -40,11 +40,11 @@ def create_portfolios_table():
 	c.execute("""CREATE TABLE `portfolios` (
 			`id` INTEGER,
 			`username` VARCHAR,
-			`account_name` VARCHAR,
+			`account_id` VARCHAR,
 			`portfolio_name` VARCHAR,
 			PRIMARY KEY (`id`),
 			FOREIGN KEY (username) REFERENCES users(username),
-			FOREIGN KEY (account_name) REFERENCES accounts(name)
+			FOREIGN KEY (account_name) REFERENCES accounts(id)
 			)""")
 	conn.commit()
 	conn.close()
@@ -60,6 +60,7 @@ def create_stocks_table():
 			`ticker` VARCHAR,
 			`company_name` TEXT,
 			`buy_price` INT,
+			`amount` INT,
 			FOREIGN KEY (portfolio_id) REFERENCES portfolios(id),
 			PRIMARY KEY (`id`)
 			)""")

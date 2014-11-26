@@ -133,6 +133,7 @@ class Views:
 			
 			Stock Ticker: {0}
 			Company Name: {1}
-			Buy Price: {2}
+			Buy Price: ${2}
+			Quantity: {3}
 
-				'''.format(stock[3], stock[2]))
+				'''.format(stock[2].upper(), stock[3], stock[4], stock[5]))
