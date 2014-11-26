@@ -40,6 +40,7 @@ class Views:
 		return input('''
 	[1] View Bank Accounts
 	[2] Create Account
+	[3] Main Menu
 
 	What would you like to do?:  
 		''')

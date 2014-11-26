@@ -61,18 +61,18 @@ class Controller(object):
 			if choice == "1":
 				self.accounts_view()
 			elif choice == "2":
-				account_name = Views.account_register()
-				init_balance = Views.user_prompt("What will be the initial balance?: ")
-				if int(init_balance) < 1:
-					Views.invalid()
-				else:
-					self.user.create_account(account_name, init_balance)
+				self.account_registration()
+			elif choice == "3":
+				self.main_menu()
+			else:
+				Views.invalid()
 			
 	def accounts_view(self):
 		while(True):
 			account_list = DB_API.fetch_accounts(self.username)
 			if account_list == None:
-				self.account_registration()
+				print("You have no accounts. Go create one.")
+				self.account_menu()
 			else:
 				account_name = Views.accounts_list(account_list)
 				account = DB_API.fetch_account_by_name(account_name, self.username)
@@ -102,7 +102,7 @@ class Controller(object):
 					Views.invalid()
 				else:
 					self.account.deposit(amount)
-					self.accounts_view()
+					self.account_menu()
 			elif choice == "2":
 				amount = Views.user_prompt("How much would you like to withdraw?: ")
 				if int(amount) < 1:
@@ -111,7 +111,7 @@ class Controller(object):
 					print("Error: You don't have that much")
 				else:
 					self.account.withdraw(amount)
-					self.accounts_view()
+					self.account_menu()
 			elif choice == "3":
 				deleter = Views.user_prompt("Are you sure you want to delete this account? Y/N: ")
 				if deleter == "Y" or deleter =="y":
@@ -143,6 +143,8 @@ class Controller(object):
 			elif choice == "2":
 				ticker = Views.user_prompt("What is the stock ticker?")
 				amount = Views.user_prompt("How many would you like to buy?")
+				if int(amount) < 1:
+					Views.invalid()
 				buy = self.portfolio.buy_stock(ticker, amount)
 				if buy == "Nothing here":
 					Views.invalid()
@@ -155,7 +157,10 @@ class Controller(object):
 				ticker = Views.user_prompt("What is the ticker of the stock to sell?")
 				buy_price = Views.user_prompt("What is the buy price of the stock to sell?")
 				timestamp = Views.user_prompt("What is the timestamp of the stock to sell?")
+				timestamp = timestamp.strip()
 				amount = Views.user_prompt("How much of this stock do you want to sell?")
+				if int(amount) < 1:
+					Views.invalid()
 				sell = self.portfolio.sell_stock(ticker, buy_price, amount, timestamp)
 				if sell == False:
 					Views.invalid()
