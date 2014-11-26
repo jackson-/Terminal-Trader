@@ -1,6 +1,7 @@
 import sqlite3
 from random import randint
 import markit_wrapper
+from datetime import datetime
 
 # default values
 db = "trader.db"
@@ -69,27 +70,38 @@ class Portfolio(object):
 		DB_API.change_portfolio_account(account_id, username, portfolio_id)
 
 	def buy_stock(self, ticker, amount):
+		timestamp = datetime.now()
 		quote = markit.get_quote(ticker)
 		if quote == None:
-			return None
+			return "Nothing here"
 		buy_price = int(quote['LastPrice'])
 		company_name = quote['Name']
 		deductable = buy_price * int(amount)
 		account = DB_API.fetch_account_by_name(self.account_name, self.username)
 		account_balance = account[0][2]
-		print(account_balance)
 		new_balance = account_balance - deductable
 		if new_balance < 0:
-			print('went false')
 			return False
 		else:
-			print('went thru')
 			DB_API.withdraw(self.account_name, self.username, new_balance)
-			DB_API.add_stock(self.id, ticker, company_name, buy_price, amount)
+			DB_API.add_stock(self.id, ticker, company_name, buy_price, amount, timestamp)
 
-	def sell_stock(self, ticker, buy_price, amount):
-		stock = DB_API.fetch_stock(self.id, ticker, buy_price)
-		print(stock)
+	def sell_stock(self, ticker, buy_price, amount, timestamp):
+		stock = DB_API.fetch_stock(self.id, ticker, buy_price, timestamp)
+		if stock == None:
+			return False
+		new_amount = int(stock[0][5]) - int(amount)
+		if new_amount == 0:
+			DB_API.delete_stock(self.id, ticker, buy_price, timestamp)
+		else:
+			quote = markit.get_quote(ticker)
+			sell_price = int(quote['LastPrice'])
+			addition = sell_price * int(amount)
+			account = DB_API.fetch_account_by_name(self.account_name, self.username)
+			account_balance = account[0][2]
+			new_balance = int(account_balance) + int(addition)
+			DB_API.deposit(self.account_name, self.username, new_balance)
+			DB_API.update_stock(self.id, ticker, buy_price, new_amount, timestamp)
 
 
 class Stock(object):
@@ -132,11 +144,20 @@ class DB_API:
 		conn.close()
 
 	@staticmethod
-	def add_stock(portfolio_id, ticker, company_name, buy_price, amount):
+	def add_stock(portfolio_id, ticker, company_name, buy_price, amount, timestamp):
 		conn = sqlite3.connect(db)
 		c = conn.cursor()
-		statement = "INSERT INTO stocks(portfolio_id, ticker, company_name, buy_price, amount) VALUES (?, ?, ?, ?, ?)"
-		c.execute(statement, (portfolio_id, ticker, company_name, buy_price, amount,))
+		statement = "INSERT INTO stocks(portfolio_id, ticker, company_name, buy_price, amount, timestamp) VALUES (?, ?, ?, ?, ?, ?)"
+		c.execute(statement, (portfolio_id, ticker, company_name, buy_price, amount, timestamp,))
+		conn.commit()
+		conn.close()
+
+	@staticmethod
+	def delete_stock(portfolio_id, ticker, buy_price, timestamp):
+		conn = sqlite3.connect(db)
+		c = conn.cursor()
+		statement = "DELETE FROM stocks WHERE portfolio_id = (?) AND ticker = (?) AND buy_price = (?) AND timestamp = (?)"
+		c.execute(statement, (portfolio_id, ticker, buy_price, timestamp,))
 		conn.commit()
 		conn.close()
 
@@ -235,11 +256,11 @@ class DB_API:
 		conn.close()
 
 	@staticmethod
-	def fetch_stock(portfolio_id, ticker, buy_price):
+	def fetch_stock(portfolio_id, ticker, buy_price, timestamp):
 		conn = sqlite3.connect(db)
 		c = conn.cursor()
-		statement = "SELECT * FROM stocks WHERE portfolio_id = (?), ticker = (?), buy_price = (?)"
-		c.execute(statement, (portfolio_id, ticker, buy_price,))
+		statement = "SELECT * FROM stocks WHERE portfolio_id = (?) AND ticker = (?) AND buy_price = (?) AND timestamp = (?)"
+		c.execute(statement, (portfolio_id, ticker, buy_price, timestamp,))
 		stocks = c.fetchall()
 		if len(stocks) == 0:
 			return None
@@ -320,5 +341,14 @@ class DB_API:
 		c = conn.cursor()
 		statement = "UPDATE portfolios SET account_id = (?) WHERE username = (?) AND portfolio_id = (?)"
 		c.execute(statement, (account_id, username, portfolio_id,))
+		conn.commit()
+		conn.close()
+
+	@staticmethod
+	def update_stock(portfolio_id, ticker, buy_price, new_amount, timestamp):
+		conn = sqlite3.connect(db)
+		c = conn.cursor()
+		statement = "UPDATE stocks SET amount = (?) WHERE portfolio_id = (?) AND ticker = (?) AND buy_price = (?) AND timestamp = (?) "
+		c.execute(statement, (new_amount, portfolio_id, ticker, buy_price, timestamp,))
 		conn.commit()
 		conn.close()
