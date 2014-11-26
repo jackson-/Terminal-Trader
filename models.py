@@ -279,6 +279,10 @@ class DB_API:
 		c = conn.cursor()
 		statement = "UPDATE users SET username = (?) WHERE username = (?)"
 		c.execute(statement, (new_username, old_username,))
+		statement = "UPDATE portfolios SET username = (?) WHERE username = (?)"
+		c.execute(statement, (new_username, old_username,))
+		statement = "UPDATE accounts SET username = (?) WHERE username = (?)"
+		c.execute(statement, (new_username, old_username,))
 		conn.commit()
 		conn.close()
 
