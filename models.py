@@ -93,6 +93,8 @@ class Portfolio(object):
 		new_amount = int(stock[0][5]) - int(amount)
 		if new_amount == 0:
 			DB_API.delete_stock(self.id, ticker, buy_price, timestamp)
+		elif new_amount < 0:
+			return False
 		else:
 			quote = markit.get_quote(ticker)
 			sell_price = int(quote['LastPrice'])
