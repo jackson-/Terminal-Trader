@@ -10,16 +10,17 @@ def create_users_table():
 			`password` VARCHAR,
 			`first_name` TEXT,
 			`last_name` TEXT,
+			`permission_level` TEXT, 
 			PRIMARY KEY (`id`)
 			)""")
 	conn.commit()
 	conn.close()
 
 
-def create_accounts_table():
+def create_portfolio_accounts_table():
 	conn = sqlite3.connect('trader.db')
 	c = conn.cursor()
-	c.execute('''DROP TABLE IF EXISTS `accounts`;''')
+	c.execute('''DROP TABLE IF EXISTS `portfolio_accounts`;''')
 	c.execute("""CREATE TABLE `accounts` (
 			`id` INTEGER,
 			`username` VARCHAR,
@@ -67,6 +68,8 @@ def create_stocks_table():
 			)""")
 	conn.commit()
 	conn.close()
+
+
 
 create_portfolios_table()
 create_stocks_table()

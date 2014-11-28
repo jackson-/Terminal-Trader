@@ -7,6 +7,13 @@ from datetime import datetime
 db = "trader.db"
 markit = markit_wrapper.Markit()
 
+
+class BankAccount(object):
+	def __init__(self, account_name, username, init_balance):
+		self.account_name = account_name
+		self.username = username
+		self.balance = init_balance
+
 class User(object):
 
 	def __init__(self, user_id, username, password, first_name, last_name):
@@ -22,21 +29,6 @@ class User(object):
 
 	def delete_account(self, account_name):
 		Account.delete_self(self.username, self.user_password)
-
-	def create_portfolio(self, username, account_name, portfolio_name):
-		DB_API.create_portfolio( self.username, account_name, portfolio_name)
-
-	def change_username(self, old_username, new_username):
-		DB_API.change_username(self.username, new_username)
-
-	def change_password(self, username, new_password):
-		DB_API.change_password(self.username, new_password)
-
-	def change_first_name(self, username, new_first_name):
-		DB_API.change_first_name(self.username, new_first_name)
-
-	def change_last_name(self, username, new_last_name):
-		DB_API.change_last_name(self.username, new_last_name)
 
 
 class Account(object):
@@ -354,3 +346,9 @@ class DB_API:
 		c.execute(statement, (new_amount, portfolio_id, ticker, buy_price, timestamp,))
 		conn.commit()
 		conn.close()
+
+## refactor DB_API to return objects and reduce function count
+## decouple bank and stock trading modules/ different DB's/ different files/ independent
+## client and banker software
+## user can link money bank account to trading account/ both are seperate
+## write interface class
