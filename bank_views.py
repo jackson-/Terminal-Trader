@@ -81,7 +81,7 @@ class Views:
 	def account_register():
 		while(True):
 			name =  input('''
-		What would you like to name the account?:  
+		What would you like to name your new account?:  
 			''')
 			balance =  input('''
 		How much is the initial balance?:  
@@ -101,6 +101,34 @@ class Views:
 			Balance: {1}
 				'''.format(account.account_name, account.balance))
 			account_name = input("What is the name of the account you want to manage?:  ")
+			for account in accounts:
+				if account_name == account.account_name:
+					return account
+				else:
+					Views.invalid()
+
+	@staticmethod
+	def all_or_one():
+		while(True):
+			answer =  input('''
+
+		Do you want to delete all accounts or just one?
+			''')
+			if answer == 'all' or answer == 'one':
+				return answer
+			else:
+				Views.invalid()
+
+	@staticmethod
+	def account_delete(accounts):
+		while(True):
+			for account in accounts:
+				print('''
+			Account Name: {0}
+			Balance: {1}
+			Account Number: {2}
+				'''.format(account.account_name, account.balance, account.account_number))
+			account_name = input("What is the name of the account you want to delete?:  ")
 			for account in accounts:
 				if account_name == account.account_name:
 					return account

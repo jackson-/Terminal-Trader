@@ -39,7 +39,7 @@ class Controller:
 	def main_menu(self):
 		while(True):
 			choice = Views.main_menu()
-			choices = {'1' : self.account_list, '2' : self.account_register, '3' : self.account_delete, '4' : self.sign_in}
+			choices = {'1' : self.account_list, '2' : self.account_register, '3' : self.permission_verifier, '4' : self.sign_in}
 			if choice in choices.keys():
 				choices[choice]()
 			else:
@@ -60,7 +60,7 @@ class Controller:
 	def account_register(self):
 		while(True):
 			account = Views.account_register()
-			DB_API.create_account(self.user.id, account[0], account[1])
+			self.user.create_account(self.user.id, account[0], account[1])
 			self.main_menu()
 
 	def account_manager(self, account):
@@ -84,8 +84,27 @@ class Controller:
 			account.withdraw(amount)
 			self.account_manager(account)
 
+	def all_deleter(self):
+		self.user.delete_all_accounts()
+		self.main_menu()
+
 	def account_delete(self):
-		pass
+		while(True):
+			if self.user.permission_level == 'banker':
+				accounts = DB_API.fetch_all_accounts()
+			else:
+				accounts = DB_API.fetch_accounts(self.user.id)
+			account_to_delete = Views.account_delete(accounts)
+			self.user.delete_account(account_to_delete.user_id, account_to_delete.account_name)
+
+	def permission_verifier(self):
+		if self.user.permission_level == 'banker'
+			choice = Views.all_or_one()
+			choices = {'all':self.all_deleter, 'one': self.account_delete}
+			choices[choice]()
+		else:
+			self.account_delete()
+
 
 	def account_transfer(self, account):
 		accounts = DB_API.fetch_all_accounts()

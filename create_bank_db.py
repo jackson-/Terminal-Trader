@@ -23,6 +23,7 @@ def create_bank_accounts_table():
 			`user_id` INTEGER,
 			`account_name` INT,
 			`balance` INT,
+			`account_number` INT,
 			FOREIGN KEY (user_id) REFERENCES users(id),
 			PRIMARY KEY (`id`)
 			)""")
