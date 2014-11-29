@@ -7,21 +7,12 @@ from datetime import datetime
 db = "trader.db"
 markit = markit_wrapper.Markit()
 
-
-class BankAccount(object):
-	def __init__(self, account_name, username, init_balance):
-		self.account_name = account_name
-		self.username = username
-		self.balance = init_balance
-
 class User(object):
 
-	def __init__(self, user_id, username, password, first_name, last_name):
+	def __init__(self, user_id, username, password):
 		self.id = user_id
 		self.username = username
 		self.password = password
-		self.first_name = first_name
-		self.last_name = last_name
 
 	def create_account(self, account_name, init_balance):
 		account_number = randint(11111111, 99999999)
@@ -98,7 +89,7 @@ class Portfolio(object):
 			DB_API.update_stock(self.id, ticker, buy_price, new_amount, timestamp)
 
 
-class Stock(object):
+class Purchase(object):
 
 	def __init__(self, stock_id, ticker, company_name, buy_price, portfolio_id):
 		self.id = stock_id
@@ -111,11 +102,11 @@ class Stock(object):
 class DB_API:
 
 	@staticmethod
-	def create_user(username, password, first_name, last_name):
+	def create_user(username, password):
 		conn = sqlite3.connect(db)
 		c = conn.cursor()
-		statement = "INSERT INTO users(username, password, first_name, last_name) VALUES (?, ?, ?, ?)"
-		c.execute(statement, (username, password, first_name, last_name,))
+		statement = "INSERT INTO users(username, password) VALUES (?, ?)"
+		c.execute(statement, (username, password,))
 		conn.commit()
 		conn.close()
 
@@ -141,7 +132,7 @@ class DB_API:
 	def add_stock(portfolio_id, ticker, company_name, buy_price, amount, timestamp):
 		conn = sqlite3.connect(db)
 		c = conn.cursor()
-		statement = "INSERT INTO stocks(portfolio_id, ticker, company_name, buy_price, amount, timestamp) VALUES (?, ?, ?, ?, ?, ?)"
+		statement = "INSERT INTO purchases(portfolio_id, ticker, company_name, buy_price, amount, timestamp) VALUES (?, ?, ?, ?, ?, ?)"
 		c.execute(statement, (portfolio_id, ticker, company_name, buy_price, amount, timestamp,))
 		conn.commit()
 		conn.close()
@@ -150,7 +141,7 @@ class DB_API:
 	def delete_stock(portfolio_id, ticker, buy_price, timestamp):
 		conn = sqlite3.connect(db)
 		c = conn.cursor()
-		statement = "DELETE FROM stocks WHERE portfolio_id = (?) AND ticker = (?) AND buy_price = (?) AND timestamp = (?)"
+		statement = "DELETE FROM purchases WHERE portfolio_id = (?) AND ticker = (?) AND buy_price = (?) AND timestamp = (?)"
 		c.execute(statement, (portfolio_id, ticker, buy_price, timestamp,))
 		conn.commit()
 		conn.close()
@@ -165,15 +156,16 @@ class DB_API:
 		if len(user) == 0:
 			return None
 		else:
+			user = User(user[0][0], user[0][1], user[0][2], )
 			return user
 		conn.close()
 
 	@staticmethod
-	def fetch_accounts(username):
+	def fetch_accounts(user_id):
 		conn = sqlite3.connect(db)
 		c = conn.cursor()
-		statement = "SELECT * FROM accounts WHERE username = (?)"
-		c.execute(statement, (username,))
+		statement = "SELECT * FROM portfolio_accounts WHERE user_id = (?)"
+		c.execute(statement, (user_id,))
 		account_list = c.fetchall()
 		if len(account_list) == 0:
 			return None
@@ -240,26 +232,26 @@ class DB_API:
 		statement = "SELECT id FROM portfolios WHERE portfolio_name = (?) AND username = (?)"
 		c.execute(statement, (portfolio_name, username,))
 		portfolio_id = c.fetchone()
-		statement = "SELECT * FROM stocks WHERE portfolio_id = (?)"
+		statement = "SELECT * FROM purchases WHERE portfolio_id = (?)"
 		c.execute(statement, (portfolio_id[0],))
-		stocks = c.fetchall()
-		if len(stocks) == 0:
+		purchases = c.fetchall()
+		if len(purchases) == 0:
 			return None
 		else:
-			return stocks
+			return purchases
 		conn.close()
 
 	@staticmethod
 	def fetch_stock(portfolio_id, ticker, buy_price, timestamp):
 		conn = sqlite3.connect(db)
 		c = conn.cursor()
-		statement = "SELECT * FROM stocks WHERE portfolio_id = (?) AND ticker = (?) AND buy_price = (?) AND timestamp = (?)"
+		statement = "SELECT * FROM purchases WHERE portfolio_id = (?) AND ticker = (?) AND buy_price = (?) AND timestamp = (?)"
 		c.execute(statement, (portfolio_id, ticker, buy_price, timestamp,))
-		stocks = c.fetchall()
-		if len(stocks) == 0:
+		purchases = c.fetchall()
+		if len(purchases) == 0:
 			return None
 		else:
-			return stocks
+			return purchases
 		conn.close()
 
 	@staticmethod
@@ -342,7 +334,7 @@ class DB_API:
 	def update_stock(portfolio_id, ticker, buy_price, new_amount, timestamp):
 		conn = sqlite3.connect(db)
 		c = conn.cursor()
-		statement = "UPDATE stocks SET amount = (?) WHERE portfolio_id = (?) AND ticker = (?) AND buy_price = (?) AND timestamp = (?) "
+		statement = "UPDATE purchases SET amount = (?) WHERE portfolio_id = (?) AND ticker = (?) AND buy_price = (?) AND timestamp = (?) "
 		c.execute(statement, (new_amount, portfolio_id, ticker, buy_price, timestamp,))
 		conn.commit()
 		conn.close()

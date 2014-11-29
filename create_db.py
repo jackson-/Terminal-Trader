@@ -8,9 +8,6 @@ def create_users_table():
 			`id` INTEGER,
 			`username` VARCHAR,
 			`password` VARCHAR,
-			`first_name` TEXT,
-			`last_name` TEXT,
-			`permission_level` TEXT, 
 			PRIMARY KEY (`id`)
 			)""")
 	conn.commit()
@@ -21,14 +18,13 @@ def create_portfolio_accounts_table():
 	conn = sqlite3.connect('trader.db')
 	c = conn.cursor()
 	c.execute('''DROP TABLE IF EXISTS `portfolio_accounts`;''')
-	c.execute("""CREATE TABLE `accounts` (
+	c.execute("""CREATE TABLE `portfolio_accounts` (
 			`id` INTEGER,
-			`username` VARCHAR,
+			`user_id` INTEGER,
 			`balance` INT,
 			`account_name` VARCHAR,
-			`account_number` INT,
 			PRIMARY KEY (`id`),
-			FOREIGN KEY (username) REFERENCES users(username)
+			FOREIGN KEY (user_id) REFERENCES users(id)
 			)""")
 	conn.commit()
 	conn.close()
@@ -40,22 +36,22 @@ def create_portfolios_table():
 	c.execute('''DROP TABLE IF EXISTS `portfolios`;''')
 	c.execute("""CREATE TABLE `portfolios` (
 			`id` INTEGER,
-			`username` VARCHAR,
-			`account_name` VARCHAR,
+			`user_id` INTEGER,
+			`account_id` INTEGER,
 			`portfolio_name` VARCHAR,
 			PRIMARY KEY (`id`),
-			FOREIGN KEY (username) REFERENCES users(username),
-			FOREIGN KEY (account_name) REFERENCES accounts(account_name)
+			FOREIGN KEY (user_id) REFERENCES users(id),
+			FOREIGN KEY (account_id) REFERENCES accounts(id)
 			)""")
 	conn.commit()
 	conn.close()
 
 
-def create_stocks_table():
+def create_purchases_table():
 	conn = sqlite3.connect('trader.db')
 	c = conn.cursor()
-	c.execute('''DROP TABLE IF EXISTS `stocks`;''')
-	c.execute("""CREATE TABLE `stocks` (
+	c.execute('''DROP TABLE IF EXISTS `purchases`;''')
+	c.execute("""CREATE TABLE `purchases` (
 			`id` INTEGER,
 			`portfolio_id` INTEGER,
 			`ticker` VARCHAR,
@@ -72,6 +68,6 @@ def create_stocks_table():
 
 
 create_portfolios_table()
-create_stocks_table()
+create_purchases_table()
 create_users_table()
-create_accounts_table()
+create_portfolio_accounts_table()

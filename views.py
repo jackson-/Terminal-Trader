@@ -24,26 +24,57 @@ class Views:
 		return input(string)
 
 	@staticmethod
-	def main_menu():
-		return input('''
-	[1] Bank Accounts
-	[2] Investment Portfolios
-	[3] Stock Lookup
-	[4] Update Profile Info
-	[5] Logout
-
-	What would you like to do?:  
+	def user_register():
+		username = input('''
+	You don't have an account. What do you want your username to be?:  
 		''')
+		password = input('''
+	What will your password be?
+			''')
+		return(username, password)
 
 	@staticmethod
-	def account_menu():
-		return input('''
-	[1] View Bank Accounts
-	[2] Create Account
-	[3] Main Menu
-
-	What would you like to do?:  
+	def user_verify(user):
+		password_try = input('''
+	What is your password?:  
 		''')
+		if password_try == user.password:
+			return 'pass'
+		else:
+			Views.invalid()
+			return None
+
+	@staticmethod
+	def main_menu():
+		while(True):
+			choice = input('''
+		[1] Accounts
+		[2] Investment Portfolios
+		[3] Stock Lookup
+		[4] Logout
+
+		What would you like to do?:  
+			''')
+			if choice is '1' or choice is '2' or choice is '3' or choice is '4':
+				return choice
+			else:
+				Views.invalid()
+
+	@staticmethod
+	def accounts_main_menu():
+		while(True):
+			choice = input('''
+		[1] Manage Accounts
+		[2] Create Accounts
+		[3] Delete Accounts
+		[4] Main Menu
+
+		What would you like to do?:  
+			''')
+			if choice is '1' or choice is '2' or choice is '3' or choice is '4':
+					return choice
+				else:
+					Views.invalid()
 
 	@staticmethod
 	def account_register():
@@ -64,6 +95,22 @@ class Views:
 			Balance: {2}
 				'''.format(item_num, account[3], account[2]))
 		return input("What is the name of the account you want to choose?:  ")
+
+	@staticmethod
+	def portfolios_main_menu():
+		while(True):
+			choice = input('''
+		[1] Manage Portfolios
+		[2] Create Portfolios
+		[3] Delete Portfolios
+		[4] Main Menu
+
+		What would you like to do?:  
+			''')
+			if choice is '1' or choice is '2' or choice is '3' or choice is '4':
+					return choice
+				else:
+					Views.invalid()
 
 	@staticmethod
 	def portfolio_list(portfolio_list):
@@ -111,23 +158,6 @@ class Views:
 		return input("What would you like to do?:  ")
 
 	@staticmethod
-	def profile_manager(user):
-		print('''
-		Username: {0}
-		Password: {1}
-		First Name: {2}
-		Last Name: {3}
-
-		[1] Change Username
-		[2] Change Password
-		[3] Change First Name
-		[4] Change Last Name
-		[5] Main Menu
-
-			'''.format(user.username, user.password, user.first_name, user.last_name,))
-		return input("What is would you like to do?: ")
-
-	@staticmethod
 	def inventory_view(inventory):
 		for stock in inventory:
 			print('''
@@ -142,11 +172,15 @@ class Views:
 
 	@staticmethod
 	def stock_lookup(quote):
-		print('''
-
-		Stock Ticker: {0}
-		Company Name: {1}
-		Price: {2}
-
-
-			'''.format(quote['Symbol'], quote['Name'], quote['LastPrice']))
+		while(True):
+			search = input('''
+		Do you want to search by name or ticker?:  
+				''')
+			if search == 'name':
+				name = input("What is the name of the company to lookup?:  ")
+				return('name', name)
+			elif search == 'ticker':
+				ticker = input("What is the ticker of the company to lookup?:  ")
+				return('ticker', ticker)
+			else:
+				Views.invalid()
