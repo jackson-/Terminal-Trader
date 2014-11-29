@@ -39,7 +39,7 @@ class Controller:
 	def main_menu(self):
 		while(True):
 			choice = Views.main_menu()
-			choices = {'1' : self.account_list, '2' : self.account_register, '3' : self.sign_in}
+			choices = {'1' : self.account_list, '2' : self.account_register, '3' : self.account_delete, '4' : self.sign_in}
 			if choice in choices.keys():
 				choices[choice]()
 			else:
@@ -47,25 +47,52 @@ class Controller:
 
 	def account_list(self):
 		while(True):
-			accounts = DB_API.fetch_accounts(self.user.id)
+			if self.user.permission_level == 'banker':
+				accounts = DB_API.fetch_all_accounts()
+			else:
+				accounts = DB_API.fetch_accounts(self.user.id)
 			if accounts is None:
 				self.account_register()
 			else:
 				account = Views.account_chooser(accounts)
-				print(account)
-
+				self.account_manager(account)
 
 	def account_register(self):
 		while(True):
 			account = Views.account_register()
-			if account is None:
-				Views.main_menu()
-			else:
-				DB_API.create_account(self.user.id, account[0], account[1])
+			DB_API.create_account(self.user.id, account[0], account[1])
 			self.main_menu()
 
+	def account_manager(self, account):
+		while(True):
+			choice = Views.account_manager(account)
+			choices = {'1': self.account_deposit, '2' : self.account_withdraw, '3': self.account_transfer, '4' : self.main_menu}
+			if choice == '4':
+				choices[choice]()
+			else:	
+				choices[choice](account)
 
+	def account_deposit(self, account):
+		while(True):
+			amount = Views.account_deposit(account)
+			account.deposit(amount)
+			self.account_manager(account)
 
+	def account_withdraw(self, account):
+		while(True):
+			amount = Views.account_withdraw(account)
+			account.withdraw(amount)
+			self.account_manager(account)
+
+	def account_delete(self):
+		pass
+
+	def account_transfer(self, account):
+		accounts = DB_API.fetch_all_accounts()
+		dest_account = Views.account_transfer(account, accounts)
+		amount = Views.transfer_amount(account)
+		new_dest_balance = dest_account.balance + amount
+		account.transfer(account.id, dest_account.id, amount, new_dest_balance)
 
 c = Controller()
 c.sign_in()

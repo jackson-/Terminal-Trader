@@ -7,16 +7,22 @@ db = 'bank.db'
 
 class BankAccount(object):
 	def __init__(self, account_id, user_id, account_name, init_balance):
-		self.account_id = account_id
+		self.id = account_id
 		self.user_id = user_id
 		self.account_name = account_name
 		self.balance = init_balance
 
 	def deposit(self, amount):
 		self.balance = self.balance + amount
+		DB_API.deposit(self.id, self.balance)
 
 	def withdraw(self, amount):
 		self.balance = self.balance - amount
+		DB_API.withdraw(self.id, self.balance)
+
+	def transfer(self, src_acct_id, dest_acct_id, amount, dest_balance):
+		self.balance = self.balance - amount
+		DB_API.transfer(src_acct_id, dest_acct_id, self.balance, dest_balance)
 
 
 class User(object):
@@ -54,7 +60,8 @@ class Client(User):
 
 
 class Banker(User):
-	def __init__(self, permission_level):
+	
+	def transfer(self, src_acct_id, dest_acct_id, amount):
 		pass
 
 
@@ -105,4 +112,49 @@ class DB_API:
 			for account in accounts:
 				account_list.append(BankAccount(account[0], account[1], account[2], account[3]))
 			return account_list
+		conn.close()
+
+	@staticmethod
+	def fetch_all_accounts():
+		conn = sqlite3.connect(db)
+		c = conn.cursor()
+		statement = "SELECT * FROM bank_accounts"
+		c.execute(statement)
+		accounts = c.fetchall()
+		account_list = []
+		if len(accounts) == 0:
+			return None
+		else:
+			for account in accounts:
+				account_list.append(BankAccount(account[0], account[1], account[2], account[3]))
+			return account_list
+		conn.close()
+
+	@staticmethod
+	def deposit(account_id, balance):
+		conn = sqlite3.connect(db)
+		c = conn.cursor()
+		statement = "UPDATE bank_accounts SET balance = (?) WHERE id = (?)"
+		c.execute(statement, (balance, account_id,))
+		conn.commit()
+		conn.close()
+
+	@staticmethod
+	def withdraw(account_id, balance):
+		conn = sqlite3.connect(db)
+		c = conn.cursor()
+		statement = "UPDATE bank_accounts SET balance = (?) WHERE id = (?)"
+		c.execute(statement, (balance, account_id,))
+		conn.commit()
+		conn.close()
+
+	@staticmethod
+	def transfer(src_account_id, dest_account_id, src_balance, dest_balance):
+		conn = sqlite3.connect(db)
+		c = conn.cursor()
+		statement = "UPDATE bank_accounts SET balance = (?) WHERE id = (?)"
+		c.execute(statement, (src_balance, src_account_id,))
+		statement = "UPDATE bank_accounts SET balance = (?) WHERE id = (?)"
+		c.execute(statement, (dest_balance, dest_account_id,))
+		conn.commit()
 		conn.close()
