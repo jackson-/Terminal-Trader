@@ -6,9 +6,10 @@ from datetime import datetime
 db = 'bank.db'
 
 class BankAccount(object):
-	def __init__(self, account_name, username, init_balance):
+	def __init__(self, account_id, user_id, account_name, init_balance):
+		self.account_id = account_id
+		self.user_id = user_id
 		self.account_name = account_name
-		self.username = username
 		self.balance = init_balance
 
 	def deposit(self, amount):
@@ -19,15 +20,15 @@ class BankAccount(object):
 
 
 class User(object):
-	def __init__(self, user_id, username, first_name, last_name):
+	def __init__(self, user_id, username, password, permission_level):
 		self.id = user_id
 		self.username = username
-		self.first_name = first_name
-		self.last_name = last_name
+		self.password = password
+		self.permission_level = permission_level
+
 
 class Client(User):
-	def __init__(self, permission_level):
-		self.permission_level = "client"
+
 
 	def create_account(self, account_name, init_balance):
 		account_number = randint(11111111, 99999999)
@@ -54,7 +55,7 @@ class Client(User):
 
 class Banker(User):
 	def __init__(self, permission_level):
-		self.permission_level = "banker"
+		pass
 
 
 class DB_API:
@@ -65,6 +66,15 @@ class DB_API:
 		c = conn.cursor()
 		statement = "INSERT INTO users(username, password, permission_level) VALUES (?, ?, ?)"
 		c.execute(statement, (username, password, permission_level,))
+		conn.commit()
+		conn.close()
+
+	@staticmethod
+	def create_account(user_id, account_name, balance):
+		conn = sqlite3.connect(db)
+		c = conn.cursor()
+		statement = "INSERT INTO bank_accounts(user_id, account_name, balance) VALUES (?, ?, ?)"
+		c.execute(statement, (user_id, account_name, balance,))
 		conn.commit()
 		conn.close()
 	
@@ -78,5 +88,21 @@ class DB_API:
 		if len(user) == 0:
 			return None
 		else:
-			return User(user[0][0], user[0][1], user[0][2], user[0][3], user[0][4], user[0][5])
+			return User(user[0][0], user[0][1], user[0][2], user[0][3])
+		conn.close()
+
+	@staticmethod
+	def fetch_accounts(user_id):
+		conn = sqlite3.connect(db)
+		c = conn.cursor()
+		statement = "SELECT * FROM bank_accounts WHERE user_id = ?"
+		c.execute(statement, (user_id,))
+		accounts = c.fetchall()
+		account_list = []
+		if len(accounts) == 0:
+			return None
+		else:
+			for account in accounts:
+				account_list.append(BankAccount(account[0], account[1], account[2], account[3]))
+			return account_list
 		conn.close()
