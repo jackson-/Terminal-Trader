@@ -104,7 +104,11 @@ class Controller(object):
 				choices[choice](account)
 
 	def bank_account_change(self, account):
-		pass
+		bank_accounts =  BANK_DB_API.fetch_accounts(self.user.id)
+		bank_account = BViews.account_chooser(bank_accounts)
+		account.change_bank_account(bank_account.account_name)
+		self.account_manager()
+
 
 	def deposit_earnings(self, account):
 		bank_account = BANK_DB_API.fetch_account_by_name(self.user.id, account.bank_account_name)

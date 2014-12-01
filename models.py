@@ -68,8 +68,8 @@ class Account(object):
 			addition = sell_price * int(amount)
 			self.deposit(addition)
 
-	def change_account(self, account_id, username, portfolio_id):
-		DB_API.change_portfolio_account(account_id, username, portfolio_id)
+	def change_bank_account(self, account_name):
+		DB_API.change_bank_account(self.id, account_name)
 
 class Purchase(object):
 
@@ -239,6 +239,15 @@ class DB_API:
 		c.execute(statement, (new_amount, purchase_id,))
 		conn.commit()
 		conn.close()
+
+	@staticmethod
+	def change_bank_account(portfolio_id, bank_account_name):
+		conn = sqlite3.connect(db)
+		c = conn.cursor()
+		statement = "UPDATE portfolio_accounts SET bank_account_name = (?) WHERE id = (?)"
+		c.execute(statement, (bank_account_name, portfolio_id,))
+		conn.commit()
+		conn.close	()
 
 
 ## refactor DB_API to return objects and reduce function count
