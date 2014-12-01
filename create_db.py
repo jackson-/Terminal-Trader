@@ -50,7 +50,6 @@ def create_purchases_table():
 
 
 
-create_portfolios_table()
+create_portfolio_accounts_table()
 create_purchases_table()
 create_users_table()
-create_portfolio_accounts_table()
