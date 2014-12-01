@@ -364,12 +364,14 @@ class Views:
 					'''.format(counter, purchase.ticker, purchase.company_name, purchase.buy_price, purchase.amount, purchase.timestamp))
 			uid = input("What is the UID of the stock you want to sell?: ")
 			amount = input("How many do you want to sell?:  ")
-			index = int(uid)-1
-			if len(purchases) < int(uid):
+			if uid.isdigit() != True:
 				Views.invalid()
-			elif int(amount) > purchases[index].amount:
+			elif len(purchases) < int(uid):
+				Views.invalid()
+			elif int(amount) > purchases[int(uid)-1].amount:
 				Views.invalid()
 			else:
+				index = int(uid)-1
 				return(index, amount)
 
 	@staticmethod
