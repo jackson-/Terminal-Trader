@@ -32,8 +32,8 @@ class User(object):
 		self.password = password
 		self.permission_level = permission_level
 
-	def delete_account(self, user_id, account_name):
-		BANK_DB_API.delete_account(user_id, account_name)
+	def delete_account(self, account_name):
+		BANK_DB_API.delete_account(self.id, account_name)
 
 class Client(User):
 
@@ -71,7 +71,7 @@ class BANK_DB_API:
 		conn = sqlite3.connect(db)
 		c = conn.cursor()
 		statement = "DELETE FROM bank_accounts WHERE user_id = (?) AND account_name = (?)"
-		c.execute(statement)
+		c.execute(statement, (user_id, account_name,))
 		conn.commit()
 		conn.close()
 
@@ -85,11 +85,11 @@ class BANK_DB_API:
 		conn.close()
 	
 	@staticmethod
-	def fetch_user(username):
+	def fetch_user(user_id):
 		conn = sqlite3.connect(db)
 		c = conn.cursor()
-		statement = "SELECT * FROM users WHERE username = ?"
-		c.execute(statement, (username,))
+		statement = "SELECT * FROM users WHERE id = ?"
+		c.execute(statement, (user_id,))
 		user = c.fetchall()
 		if len(user) == 0:
 			return None

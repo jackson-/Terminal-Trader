@@ -10,6 +10,7 @@ class Controller(object):
 	def sign_in(self):
 		username = Views.sign_in()
 		self.user = DB_API.fetch_user(username)
+		self.bank_user = BANK_DB_API.fetch_user(self.user.id)
 		if self.user is None:
 			self.user_register()
 		else:
@@ -20,6 +21,7 @@ class Controller(object):
 		DB_API.create_user(registration[0], registration[1])
 		BANK_DB_API.create_user(registration[0], registration[1], 'client')
 		self.user = DB_API.fetch_user(registration[0])
+		self.bank_user = DB_API.fetch_user(self.user.id)
 		self.main_menu()
 
 	def user_verify(self):
@@ -38,6 +40,21 @@ class Controller(object):
 		choices[choice]()
 
 	def bank_account_menu(self):
+		choice = BViews.main_menu()
+		choices = {'1':self.bank_account_list, '2':self.bank_account_register, '3':self.bank_account_deleter}
+		choices[choice]()
+
+	def bank_account_deleter(self):
+		accounts = BANK_DB_API.fetch_accounts(self.user.id)
+		if accounts is None:
+			Views.invalid()
+			self.accounts_main_menu()
+		else:
+			account = BViews.account_chooser(accounts)
+			self.bank_user.delete_account(account.account_name)
+			self.bank_account_menu()
+
+	def bank_account_list(self):
 		accounts = BANK_DB_API.fetch_accounts(self.user.id)
 		if accounts is None:
 			self.bank_account_register()
