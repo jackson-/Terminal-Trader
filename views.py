@@ -157,9 +157,9 @@ class Views:
 	def accounts_main_menu():
 		while(True):
 			choice = input('''
-		[1] Manage Accounts
-		[2] Create Accounts
-		[3] Delete Accounts
+		[1] Manage Portfolios
+		[2] Create Portfolios
+		[3] Delete Portfolios
 		[4] Main Menu
 
 		What would you like to do?:  
@@ -195,35 +195,6 @@ class Views:
 			Views.invalid()
 
 	@staticmethod
-	def portfolios_main_menu():
-		while(True):
-			choice = input('''
-		[1] Manage Portfolios
-		[2] Create Portfolios
-		[3] Delete Portfolios
-		[4] Main Menu
-
-		What would you like to do?:  
-			''')
-			if choice is '1' or choice is '2' or choice is '3' or choice is '4':
-					return choice
-			else:
-				Views.invalid()
-
-	@staticmethod
-	def portfolio_list(portfolio_list):
-		item_num = 0
-		for portfolio in portfolio_list:
-			item_num += 1
-			print('''
-			{0}
-			Portfolio Name: {1}
-
-				'''.format(item_num, portfolio[3]))
-		return input("What is the name of the portfolio you want to choose?:  ")
-
-
-	@staticmethod
 	def account_manager(account):
 		while(True):
 			print('''
@@ -243,27 +214,6 @@ class Views:
 						return choice
 			else:
 				Views.invalid()
-
-	@staticmethod
-	def portfolio_manager(portfolio, account_name):
-		for item in portfolio:
-			print('''
-			Portfolio Name: {0}
-
-			
-			[5] Go back
-			[6] Main Menu
-
-				'''.format(item[3], account_name))
-		return input("What would you like to do?:  ")
-
-	@staticmethod
-	def portfolio_register():
-		portfolio_name = input('''
-	What do you want your portfolio name to be?:  
-		''')
-		print("Now choose an account to link to.")
-		return(portfolio_name)
 
 	@staticmethod
 	def inventory_view(inventory):
@@ -373,10 +323,3 @@ class Views:
 			else:
 				index = int(uid)-1
 				return(index, amount)
-
-	@staticmethod
-	def portfolio_list(portfolios):
-		for portfolio in portfolios:
-			print('''
-		Portfolio Name: {0}
-				'''.format(portfolio.portfolio_name))

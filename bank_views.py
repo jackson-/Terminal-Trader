@@ -67,7 +67,7 @@ class Views:
 		[1] Manage Bank Accounts
 		[2] Create Bank Account
 		[3] Delete Bank Account
-		[4] Logout
+		[4] Go Back
 
 		What would you like to do?:  
 			''')
@@ -101,12 +101,10 @@ class Views:
 			Balance: {1}
 				'''.format(account.account_name, account.balance))
 			account_name = input("What is the name of the bank account you want to choose?:  ")
-			print(account, account_name)
 			for account in accounts:
 				if account_name == account.account_name:
 					return account
-				else:
-					Views.invalid()
+			Views.invalid()
 
 	@staticmethod
 	def all_or_one():
