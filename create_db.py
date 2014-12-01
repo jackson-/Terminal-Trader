@@ -23,29 +23,12 @@ def create_portfolio_accounts_table():
 			`user_id` INTEGER,
 			`balance` INT,
 			`account_name` VARCHAR,
+			`bank_account_name` VARCHAR,
 			PRIMARY KEY (`id`),
 			FOREIGN KEY (user_id) REFERENCES users(id)
 			)""")
 	conn.commit()
 	conn.close()
-
-
-def create_portfolios_table():
-	conn = sqlite3.connect('trader.db')
-	c = conn.cursor()
-	c.execute('''DROP TABLE IF EXISTS `portfolios`;''')
-	c.execute("""CREATE TABLE `portfolios` (
-			`id` INTEGER,
-			`user_id` INTEGER,
-			`account_id` INTEGER,
-			`portfolio_name` VARCHAR,
-			PRIMARY KEY (`id`),
-			FOREIGN KEY (user_id) REFERENCES users(id),
-			FOREIGN KEY (account_id) REFERENCES accounts(id)
-			)""")
-	conn.commit()
-	conn.close()
-
 
 def create_purchases_table():
 	conn = sqlite3.connect('trader.db')
@@ -59,7 +42,7 @@ def create_purchases_table():
 			`buy_price` INT,
 			`amount` INT,
 			`timestamp` VARCHAR,
-			FOREIGN KEY (portfolio_id) REFERENCES portfolios(id),
+			FOREIGN KEY (portfolio_id) REFERENCES portfolio_accounts(id),
 			PRIMARY KEY (`id`)
 			)""")
 	conn.commit()

@@ -100,7 +100,8 @@ class Views:
 			Account Name: {0}
 			Balance: {1}
 				'''.format(account.account_name, account.balance))
-			account_name = input("What is the name of the account you want to manage?:  ")
+			account_name = input("What is the name of the bank account you want to choose?:  ")
+			print(account, account_name)
 			for account in accounts:
 				if account_name == account.account_name:
 					return account

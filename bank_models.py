@@ -14,16 +14,16 @@ class BankAccount(object):
 		self.account_number = account_number
 
 	def deposit(self, amount):
-		self.balance = self.balance + amount
-		DB_API.deposit(self.id, self.balance)
+		self.balance = self.balance + int(amount)
+		BANK_DB_API.deposit(self.id, self.balance)
 
 	def withdraw(self, amount):
-		self.balance = self.balance - amount
-		DB_API.withdraw(self.id, self.balance)
+		self.balance = self.balance - int(amount)
+		BANK_DB_API.withdraw(self.id, self.balance)
 
 	def transfer(self, src_acct_id, dest_acct_id, amount, dest_balance):
 		self.balance = self.balance - amount
-		DB_API.transfer(src_acct_id, dest_acct_id, self.balance, dest_balance)
+		BANK_DB_API.transfer(src_acct_id, dest_acct_id, self.balance, dest_balance)
 
 class User(object):
 	def __init__(self, user_id, username, password, permission_level):
@@ -33,20 +33,20 @@ class User(object):
 		self.permission_level = permission_level
 
 	def delete_account(self, user_id, account_name):
-		DB_API.delete_account(user_id, account_name)
+		BANK_DB_API.delete_account(user_id, account_name)
 
 class Client(User):
 
 	def create_account(self, account_name, init_balance):
 		account_number = randint(11111111, 99999999)
-		DB_API.create_account(self.id, account_name, init_balance, account_number)
+		BANK_DB_API.create_account(self.id, account_name, init_balance, account_number)
 
 class Banker(User):
 	
 	def delete_all_accounts(self):
-		DB_API.delete_all_accounts()
+		BANK_DB_API.delete_all_accounts()
 
-class DB_API:
+class BANK_DB_API:
 
 	@staticmethod
 	def create_user(username, password, permission_level):
@@ -94,9 +94,9 @@ class DB_API:
 		if len(user) == 0:
 			return None
 		else:
-			if user[0][3] == 'banker'
+			if user[0][3] == 'banker':
 				return Banker(user[0][0], user[0][1], user[0][2], user[0][3])
-			else
+			else:
 				return Client(user[0][0], user[0][1], user[0][2], user[0][3])
 		conn.close()
 
@@ -112,8 +112,24 @@ class DB_API:
 			return None
 		else:
 			for account in accounts:
-				account_list.append(BankAccount(account[0], account[1], account[2], account[3]))
+				account_list.append(BankAccount(account[0], account[1], account[2], account[3], account[4]))
 			return account_list
+		conn.close()
+
+	@staticmethod
+	def fetch_account_by_name(user_id, account_name):
+		conn = sqlite3.connect(db)
+		c = conn.cursor()
+		statement = "SELECT * FROM bank_accounts WHERE user_id = (?) AND account_name = (?)"
+		c.execute(statement, (user_id, account_name,))
+		accounts = c.fetchall()
+		account_list = []
+		if len(accounts) == 0:
+			return None
+		else:
+			for account in accounts:
+				account_list.append(BankAccount(account[0], account[1], account[2], account[3], account[4]))
+			return account_list[0]
 		conn.close()
 
 	@staticmethod

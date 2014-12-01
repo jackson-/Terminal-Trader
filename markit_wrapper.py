@@ -21,4 +21,4 @@ class Markit:
 
 
 # markit = Markit()
-# print(markit.company_search("Amazon.com Inc"))
+# print(markit.get_quote("GOOGL"))

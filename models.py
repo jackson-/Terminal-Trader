@@ -14,60 +14,41 @@ class User(object):
 		self.username = username
 		self.password = password
 
-	def create_account(self, account_name, init_balance):
-		account_number = randint(11111111, 99999999)
-		DB_API.create_account(account_name, account_number, init_balance, self.username)
+	def create_account(self, account_name, init_balance, bank_account_name):
+		DB_API.create_account(account_name, init_balance, self.id, bank_account_name)
 
 	def delete_account(self, account_name):
-		Account.delete_self(self.username, self.user_password)
+		DB_API.delete_account(account_name, self.id)
 
 
 class Account(object):
-	def __init__(self, account_id, username, balance, account_name, account_number):
+	def __init__(self, account_id, user_id, balance, account_name, bank_account_name):
 		self.id = account_id
 		self.balance = balance
-		self.username = username
+		self.user_id = user_id
 		self.account_name = account_name
-		self.account_number = account_number
-
-	def delete_self(self):
-		DB_API.delete_account(self.account_name, self.username)
+		self.bank_account_name = bank_account_name
 
 	def deposit(self, amount):
 		self.balance = int(self.balance) + int(amount)
-		DB_API.deposit(self.account_name, self.username, self.balance)
+		DB_API.deposit(self.account_name, self.user_id, self.balance)
 
 	def withdraw(self, amount):
 		self.balance = int(self.balance) - int(amount)
-		DB_API.deposit(self.account_name, self.username, self.balance)
+		DB_API.withdraw(self.account_name, self.user_id, self.balance)
 
-class Portfolio(object):
-
-	def __init__(self, portfolio_id, username, portfolio_name, account_name):
-		self.id = portfolio_id
-		self.username = username
-		self.portfolio_name = portfolio_name
-		self.account_name = account_name
-
-	def change_account(self, account_id, username, portfolio_id):
-		DB_API.change_portfolio_account(account_id, username, portfolio_id)
+	def check_inventory(self):
+		DB_API.fetch_inventory(self.id)
 
 	def buy_stock(self, ticker, amount):
 		timestamp = datetime.now()
 		quote = markit.get_quote(ticker)
-		if quote == None:
-			return "Nothing here"
 		buy_price = int(quote['LastPrice'])
 		company_name = quote['Name']
 		deductable = buy_price * int(amount)
-		account = DB_API.fetch_account_by_name(self.account_name, self.username)
-		account_balance = account[0][2]
-		new_balance = account_balance - deductable
-		if new_balance < 0:
-			return False
-		else:
-			DB_API.withdraw(self.account_name, self.username, new_balance)
-			DB_API.add_stock(self.id, ticker, company_name, buy_price, amount, timestamp)
+		new_balance = self.balance - deductable
+		DB_API.withdraw(self.account_name, self.user_id, new_balance)
+		DB_API.add_stock(self.id, ticker, company_name, buy_price, amount, timestamp)
 
 	def sell_stock(self, ticker, buy_price, amount, timestamp):
 		stock = DB_API.fetch_stock(self.id, ticker, buy_price, timestamp)
@@ -88,16 +69,19 @@ class Portfolio(object):
 			DB_API.deposit(self.account_name, self.username, new_balance)
 			DB_API.update_stock(self.id, ticker, buy_price, new_amount, timestamp)
 
+	def change_account(self, account_id, username, portfolio_id):
+		DB_API.change_portfolio_account(account_id, username, portfolio_id)
 
 class Purchase(object):
 
-	def __init__(self, stock_id, ticker, company_name, buy_price, portfolio_id):
+	def __init__(self, stock_id, portfolio_id, ticker, company_name, buy_price, amount, timestamp):
 		self.id = stock_id
 		self.ticker = ticker
 		self.company_name = company_name
 		self.buy_price = buy_price
 		self.portfolio_id = portfolio_id
-
+		self.amount = amount
+		self.timestamp = timestamp
 
 class DB_API:
 
@@ -111,11 +95,11 @@ class DB_API:
 		conn.close()
 
 	@staticmethod
-	def create_account(account_name, account_number, balance, username):
+	def create_account(account_name, balance, user_id, bank_account_name):
 		conn = sqlite3.connect(db)
 		c = conn.cursor()
-		statement = "INSERT INTO accounts(account_name, account_number, balance, username) VALUES (?, ?, ?, ?)"
-		c.execute(statement, (account_name, account_number, balance, username,))
+		statement = "INSERT INTO portfolio_accounts(account_name, balance, user_id, bank_account_name) VALUES (?, ?, ?, ?)"
+		c.execute(statement, (account_name, balance, user_id, bank_account_name,))
 		conn.commit()
 		conn.close()
 
@@ -166,79 +150,46 @@ class DB_API:
 		c = conn.cursor()
 		statement = "SELECT * FROM portfolio_accounts WHERE user_id = (?)"
 		c.execute(statement, (user_id,))
-		account_list = c.fetchall()
-		if len(account_list) == 0:
+		accounts = c.fetchall()
+		account_list = []
+		if len(accounts) == 0:
 			return None
 		else:
+			for account in accounts:
+				account_list.append(Account(account[0], account[1], account[2], account[3], account[4]))
 			return account_list
 		conn.close()
 
 	@staticmethod
-	def fetch_account_by_name(account_name, username):
+	def fetch_portfolios(user_id):
 		conn = sqlite3.connect(db)
 		c = conn.cursor()
-		statement = "SELECT * FROM accounts WHERE account_name = (?) AND username = (?)"
-		c.execute(statement, (account_name, username,))
-		account = c.fetchall()
-		if len(account) == 0:
-			return None
-		else: 
-			return account
-		conn.close()
-
-	@staticmethod
-	def fetch_account_by_portfolio(portfolio_name, username):
-		conn = sqlite3.connect(db)
-		c = conn.cursor()
-		statement = "SELECT account_name FROM portfolios WHERE portfolio_name = (?) AND username = (?)"
-		c.execute(statement, (portfolio_name, username,))
-		account = c.fetchall()
-		if len(account) == 0:
-			return None
-		else: 
-			return account
-		conn.close()
-
-	@staticmethod
-	def fetch_portfolios(username):
-		conn = sqlite3.connect(db)
-		c = conn.cursor()
-		statement = "SELECT * FROM portfolios WHERE username = (?)"
-		c.execute(statement, (username,))
-		portfolio_list = c.fetchall()
-		if len(portfolio_list) == 0:
+		statement = "SELECT * FROM portfolios WHERE user_id = (?)"
+		c.execute(statement, (user_id,))
+		portfolios = c.fetchall()
+		portfolio_list = []
+		if len(portfolios) == 0:
 			return None
 		else:
+			for portfolio in portfolio_list:
+				portfolio_list.append(Portfolio(portfolio[0], portfolio[1], portfolio[2], portfolio[3]))
 			return portfolio_list
 		conn.close()
 
 	@staticmethod
-	def fetch_portfolio_by_name(username, portfolio_name):
+	def fetch_inventory(potrfolio_id):
 		conn = sqlite3.connect(db)
 		c = conn.cursor()
-		statement = "SELECT * FROM portfolios WHERE username = (?) AND portfolio_name = (?)"
-		c.execute(statement, (username, portfolio_name,))
-		portfolio = c.fetchall()
-		if len(portfolio) == 0:
-			return None
-		else:
-			return portfolio
-		conn.close()
-
-	@staticmethod
-	def fetch_portfolio_inventory(username, portfolio_name):
-		conn = sqlite3.connect(db)
-		c = conn.cursor()
-		statement = "SELECT id FROM portfolios WHERE portfolio_name = (?) AND username = (?)"
-		c.execute(statement, (portfolio_name, username,))
-		portfolio_id = c.fetchone()
 		statement = "SELECT * FROM purchases WHERE portfolio_id = (?)"
-		c.execute(statement, (portfolio_id[0],))
+		c.execute(statement, (portfolio_id,))
 		purchases = c.fetchall()
+		pruchase_list = []
 		if len(purchases) == 0:
 			return None
 		else:
-			return purchases
+			for purchase in purchases:
+				purchase_list.append(Purchase(purchase[0], purchase[1], purchase[2], purchase[3], purchase[4], purchase[5], purchase[6]))
+			return purchase_list
 		conn.close()
 
 	@staticmethod
@@ -255,69 +206,29 @@ class DB_API:
 		conn.close()
 
 	@staticmethod
-	def deposit(account_name, username, new_balance):
+	def deposit(account_name, user_id, new_balance):
 		conn = sqlite3.connect(db)
 		c = conn.cursor()
-		statement = "UPDATE accounts SET balance = (?) WHERE username = (?) AND account_name = (?)"
-		c.execute(statement, (new_balance, username, account_name,))
+		statement = "UPDATE portfolio_accounts SET balance = (?) WHERE user_id = (?) AND account_name = (?)"
+		c.execute(statement, (new_balance, user_id, account_name,))
 		conn.commit()
 		conn.close()
 
 	@staticmethod
-	def withdraw(account_name, username, new_balance):
+	def withdraw(account_name, user_id, new_balance):
 		conn = sqlite3.connect(db)
 		c = conn.cursor()
-		statement = "UPDATE accounts SET balance = (?) WHERE username = (?) AND account_name = (?)"
-		c.execute(statement, (new_balance, username, account_name,))
+		statement = "UPDATE portfolio_accounts SET balance = (?) WHERE user_id = (?) AND account_name = (?)"
+		c.execute(statement, (new_balance, user_id, account_name,))
 		conn.commit()
 		conn.close()
 
 	@staticmethod
-	def delete_account(account_name, username):
+	def delete_account(account_name, user_id):
 		conn = sqlite3.connect(db)
 		c = conn.cursor()
-		statement = "DELETE FROM accounts WHERE account_name = (?) AND username = (?)"
-		c.execute(statement, (account_name, username,))
-		conn.commit()
-		conn.close()
-
-	@staticmethod
-	def change_username(old_username, new_username):
-		conn = sqlite3.connect(db)
-		c = conn.cursor()
-		statement = "UPDATE users SET username = (?) WHERE username = (?)"
-		c.execute(statement, (new_username, old_username,))
-		statement = "UPDATE portfolios SET username = (?) WHERE username = (?)"
-		c.execute(statement, (new_username, old_username,))
-		statement = "UPDATE accounts SET username = (?) WHERE username = (?)"
-		c.execute(statement, (new_username, old_username,))
-		conn.commit()
-		conn.close()
-
-	@staticmethod
-	def change_password(username, new_password):
-		conn = sqlite3.connect(db)
-		c = conn.cursor()
-		statement = "UPDATE users SET password = (?) WHERE username = (?)"
-		c.execute(statement, (new_password, username,))
-		conn.commit()
-		conn.close()
-
-	@staticmethod
-	def change_first_name(username, new_first_name):
-		conn = sqlite3.connect(db)
-		c = conn.cursor()
-		statement = "UPDATE users SET first_name = (?) WHERE username = (?)"
-		c.execute(statement, (new_first_name, username,))
-		conn.commit()
-		conn.close()
-
-	@staticmethod
-	def change_last_name(username, new_last_name):
-		conn = sqlite3.connect(db)
-		c = conn.cursor()
-		statement = "UPDATE users SET last_name = (?) WHERE username = (?)"
-		c.execute(statement, (new_last_name, username,))
+		statement = "DELETE FROM portfolio_accounts WHERE account_name = (?) AND user_id = (?)"
+		c.execute(statement, (account_name, user_id,))
 		conn.commit()
 		conn.close()
 
