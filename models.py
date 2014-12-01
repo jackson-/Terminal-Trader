@@ -38,36 +38,35 @@ class Account(object):
 		DB_API.withdraw(self.account_name, self.user_id, self.balance)
 
 	def check_inventory(self):
-		DB_API.fetch_inventory(self.id)
+		purchases = DB_API.fetch_inventory(self.id)
+		return purchases
 
 	def buy_stock(self, ticker, amount):
 		timestamp = datetime.now()
 		quote = markit.get_quote(ticker)
-		buy_price = int(quote['LastPrice'])
+		buy_price = float(quote['LastPrice'])
 		company_name = quote['Name']
-		deductable = buy_price * int(amount)
+		deductable = buy_price * float(amount)
 		new_balance = self.balance - deductable
 		DB_API.withdraw(self.account_name, self.user_id, new_balance)
 		DB_API.add_stock(self.id, ticker, company_name, buy_price, amount, timestamp)
 
-	def sell_stock(self, ticker, buy_price, amount, timestamp):
-		stock = DB_API.fetch_stock(self.id, ticker, buy_price, timestamp)
-		if stock == None:
-			return False
-		new_amount = int(stock[0][5]) - int(amount)
+	def sell_stock(self, purchase, amount):
+		new_amount = purchase.amount - int(amount)
 		if new_amount == 0:
-			DB_API.delete_stock(self.id, ticker, buy_price, timestamp)
+			DB_API.delete_stock(purchase.id)
+			quote = markit.get_quote(purchase.ticker)
+			sell_price = float(quote['LastPrice'])
+			addition = sell_price * int(amount)
+			self.deposit(addition)
 		elif new_amount < 0:
 			return False
 		else:
-			quote = markit.get_quote(ticker)
-			sell_price = int(quote['LastPrice'])
+			DB_API.update_stock(purchase.id, new_amount)
+			quote = markit.get_quote(purchase.ticker)
+			sell_price = float(quote['LastPrice'])
 			addition = sell_price * int(amount)
-			account = DB_API.fetch_account_by_name(self.account_name, self.username)
-			account_balance = account[0][2]
-			new_balance = int(account_balance) + int(addition)
-			DB_API.deposit(self.account_name, self.username, new_balance)
-			DB_API.update_stock(self.id, ticker, buy_price, new_amount, timestamp)
+			self.deposit(addition)
 
 	def change_account(self, account_id, username, portfolio_id):
 		DB_API.change_portfolio_account(account_id, username, portfolio_id)
@@ -122,11 +121,11 @@ class DB_API:
 		conn.close()
 
 	@staticmethod
-	def delete_stock(portfolio_id, ticker, buy_price, timestamp):
+	def delete_stock(purchase_id):
 		conn = sqlite3.connect(db)
 		c = conn.cursor()
-		statement = "DELETE FROM purchases WHERE portfolio_id = (?) AND ticker = (?) AND buy_price = (?) AND timestamp = (?)"
-		c.execute(statement, (portfolio_id, ticker, buy_price, timestamp,))
+		statement = "DELETE FROM purchases WHERE id = (?)"
+		c.execute(statement, (purchase_id,))
 		conn.commit()
 		conn.close()
 
@@ -177,13 +176,13 @@ class DB_API:
 		conn.close()
 
 	@staticmethod
-	def fetch_inventory(potrfolio_id):
+	def fetch_inventory(portfolio_id):
 		conn = sqlite3.connect(db)
 		c = conn.cursor()
 		statement = "SELECT * FROM purchases WHERE portfolio_id = (?)"
 		c.execute(statement, (portfolio_id,))
 		purchases = c.fetchall()
-		pruchase_list = []
+		purchase_list = []
 		if len(purchases) == 0:
 			return None
 		else:
@@ -233,22 +232,14 @@ class DB_API:
 		conn.close()
 
 	@staticmethod
-	def change_portfolio_account(account_id, username, portfolio_id):
+	def update_stock(purchase_id, new_amount):
 		conn = sqlite3.connect(db)
 		c = conn.cursor()
-		statement = "UPDATE portfolios SET account_id = (?) WHERE username = (?) AND portfolio_id = (?)"
-		c.execute(statement, (account_id, username, portfolio_id,))
+		statement = "UPDATE purchases SET amount = (?) WHERE id = (?)"
+		c.execute(statement, (new_amount, purchase_id,))
 		conn.commit()
 		conn.close()
 
-	@staticmethod
-	def update_stock(portfolio_id, ticker, buy_price, new_amount, timestamp):
-		conn = sqlite3.connect(db)
-		c = conn.cursor()
-		statement = "UPDATE purchases SET amount = (?) WHERE portfolio_id = (?) AND ticker = (?) AND buy_price = (?) AND timestamp = (?) "
-		c.execute(statement, (new_amount, portfolio_id, ticker, buy_price, timestamp,))
-		conn.commit()
-		conn.close()
 
 ## refactor DB_API to return objects and reduce function count
 ## decouple bank and stock trading modules/ different DB's/ different files/ independent

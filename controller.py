@@ -148,12 +148,28 @@ class Controller(object):
 		account.buy_stock(quote['Symbol'], amount)
 		self.account_manager()
 
-	def sell_stock(self, quote, account, amount):
-		pass
+	def sell_stock(self, account):
+		while(True):
+			purchases = account.check_inventory()
+			if purchases is None:
+				Views.invalid()
+				self.account_manager()
+			else:
+				sell_info = Views.sell_stock(purchases)
+				purchase = purchases[sell_info[0]]
+				amount = sell_info[1]
+				account.sell_stock(purchase, amount)
+				self.account_manager()
 
 	def check_inventory(self, account):
-		purchases = account.check_inventory()
-		Views.check_inventory(purchases)
+		while(True):
+			purchases = account.check_inventory()
+			if purchases is None:
+				Views.invalid()
+				self.account_manager()
+			else:
+				Views.check_inventory(purchases)
+				self.account_manager()
 
 c = Controller()
 c.sign_in()

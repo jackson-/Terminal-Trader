@@ -332,6 +332,47 @@ class Views:
 				Views.invalid()
 
 	@staticmethod
+	def check_inventory(purchases):
+		while(True):
+			for purchase in purchases:
+				print('''
+		Ticker: {0}
+		Company Name: {1}
+		Buy Price: {2}
+		Quantity: {3}
+		Timestamp: {4}
+					'''.format(purchase.ticker, purchase.company_name, purchase.buy_price, purchase.amount, purchase.timestamp))
+			go_back = input("Say back to quit:  ")
+			if go_back == 'back':
+				return go_back
+			else:
+				Views.invalid()
+
+	@staticmethod
+	def sell_stock(purchases):
+		while(True):
+			counter = 0
+			for purchase in purchases:
+				counter+=1
+				print('''
+		UID: {0}
+		Ticker: {1}
+		Company Name: {2}
+		Buy Price: {3}
+		Quantity: {4}
+		Timestamp: {5}
+					'''.format(counter, purchase.ticker, purchase.company_name, purchase.buy_price, purchase.amount, purchase.timestamp))
+			uid = input("What is the UID of the stock you want to sell?: ")
+			amount = input("How many do you want to sell?:  ")
+			index = int(uid)-1
+			if len(purchases) < int(uid):
+				Views.invalid()
+			elif int(amount) > purchases[index].amount:
+				Views.invalid()
+			else:
+				return(index, amount)
+
+	@staticmethod
 	def portfolio_list(portfolios):
 		for portfolio in portfolios:
 			print('''
