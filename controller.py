@@ -10,7 +10,6 @@ class Controller(object):
 	def sign_in(self):
 		username = Views.sign_in()
 		self.user = DB_API.fetch_user(username)
-		self.bank_user = BANK_DB_API.fetch_user(self.user.id)
 		if self.user is None:
 			self.user_register()
 		else:
@@ -30,6 +29,7 @@ class Controller(object):
 		choices[pass_or_not]()
 
 	def main_menu(self):
+		self.bank_user = BANK_DB_API.fetch_user(self.user.id)
 		choice = Views.main_menu()
 		choices = {'1':self.bank_account_menu, '2':self.accounts_main_menu, '3':self.sign_in}
 		choices[choice]()
